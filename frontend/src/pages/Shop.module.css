@@ -1,0 +1,112 @@
+.shopContainer {
+  padding: 2rem;
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(155deg, #e9eec2, #d8ce00);
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.productCard {
+  background: rgb(90, 90, 90);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  transition: transform 0.3s;
+  color: #d8ce00;
+}
+
+.productCard:hover {
+  transform: translateY(-5px);
+}
+
+.productImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.productTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.productDescription {
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.productCategory,
+.productStock,
+.productPrice {
+  font-size: 0.85rem;
+  margin: 0.2rem 0;
+}
+
+.originalPrice {
+  text-decoration: line-through;
+  color: #888;
+  margin-right: 0.5rem;
+}
+
+.discountedPrice {
+  font-weight: bold;
+  color: rgb(6, 234, 6);
+}
+
+.buyButton {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #d1d100;
+  color: rgb(90, 90, 90);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.buyButton:hover {
+  background: #ffb301;
+}
+
+/*--- for the search bar ----*/
+
+.searchBar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.searchInput {
+  padding: 10px;
+  width: 300px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.searchButton {
+  padding: 10px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.searchButton:hover {
+  background-color: #0056b3;
+}
