@@ -72,6 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
         phoneNumber,
         address
     });
+    const { accessToken, refreshToken } = await generateRefreshAndAccessTokens(userEntry._id);
 
     const createdUser = await User.findById(userEntry._id).select(
         "-password -refreshToken");
@@ -79,9 +80,14 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser) {
         throw new apiError(500, "Error while creating error");
     }
-
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
     return res
         .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
         .json(
             new apiResponse(
                 200,
@@ -133,6 +139,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
     console.log("Login done");
     return res
+        .status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
         .json(
