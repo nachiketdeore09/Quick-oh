@@ -1,0 +1,76 @@
+.ordersPage {
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .ordersPage h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #333;
+  }
+  
+  .orderCard {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .orderCard:hover {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+  
+  .orderCard h3 {
+    margin-top: 0;
+    font-size: 1.4rem;
+    color: #444;
+  }
+  
+  .orderCard p {
+    margin: 0.4rem 0;
+    color: #555;
+    font-size: 0.95rem;
+  }
+  
+  .orderCard strong {
+    color: #222;
+  }
+  
+  .orderCard ul {
+    list-style-type: none;
+    padding-left: 1rem;
+  }
+  
+  .orderCard ul li {
+    margin: 0.3rem 0;
+    padding: 0.4rem 0.6rem;
+    background: #f9f9f9;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border: 1px solid #eee;
+  }
+
+  /*-- for cancel order button --*/
+  .cancelOrderBtn {
+    background-color: #ff4d4f;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-top: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .cancelOrderBtn:hover {
+    background-color: #d9363e;
+  }
+  
+  
