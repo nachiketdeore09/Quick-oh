@@ -11,6 +11,7 @@ import {
   Avatar,
   Box,
   Tooltip,
+  Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutModal from "./Logout-Popup";
@@ -25,19 +26,10 @@ function Navbar() {
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
   const { profileImage, updateProfileImage, role, updateRole } = useUser();
 
-  const handleOpenNavMenu = (event) => {
-    setAnchorElNav(event.currentTarget);
-  };
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
-
-  const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
-  };
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
+  const handleOpenNavMenu = (e) => setAnchorElNav(e.currentTarget);
+  const handleCloseNavMenu = () => setAnchorElNav(null);
+  const handleOpenUserMenu = (e) => setAnchorElUser(e.currentTarget);
+  const handleCloseUserMenu = () => setAnchorElUser(null);
 
   const handleLogoutClick = () => {
     setShowModal(true);
@@ -46,12 +38,11 @@ function Navbar() {
 
   const confirmLogout = async () => {
     try {
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:8000/api/v1/users/logout",
         {},
         { withCredentials: true }
       );
-      console.log(res);
       localStorage.removeItem("isAuthenticated");
       updateProfileImage("");
       updateRole("");
@@ -63,109 +54,161 @@ function Navbar() {
     }
   };
 
-  const cancelLogout = () => {
-    setShowModal(false);
-  };
+  const cancelLogout = () => setShowModal(false);
 
   return (
     <AppBar
-      position="static"
+      position="sticky"
       sx={{
-        backgroundColor: "#007CF0",
-        boxShadow: "none",
-        px: 3,
-        width: "100%",
+        background: "linear-gradient(90deg, #007cf0, #00dfd8)",
+        boxShadow: "0px 4px 15px rgba(0,0,0,0.2)",
+        px: { xs: 2, md: 6 },
+        py: 1,
+        zIndex: 1300,
       }}
     >
       <Toolbar
         disableGutters
         sx={{
-          minHeight: "100px", // makes navbar taller
-          width: "100%",
           display: "flex",
-          justifyContent: "space-between", // spreads content to corners
+          justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
         }}
       >
+        {/* 🛍️ Brand Logo */}
         <Typography
-          variant="h6"
-          noWrap
+          variant="h5"
           component={Link}
           to="/"
           sx={{
-            mr: 2,
             textDecoration: "none",
             color: "white",
             fontWeight: "bold",
+            letterSpacing: "1px",
+            "&:hover": {
+              color: "#f4f4f4",
+              textShadow: "0px 0px 8px rgba(255,255,255,0.6)",
+            },
+            transition: "all 0.3s ease",
           }}
         >
-          Quick-oh.
+          Quick-oh<span style={{ color: "#fffb00" }}>.</span>
         </Typography>
 
-        {/* Mobile Menu Icon */}
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: { xs: "flex", md: "none" },
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <IconButton size="large" onClick={handleOpenNavMenu} color="inherit">
+        {/* 📱 Mobile Menu */}
+        <Box sx={{ display: { xs: "flex", md: "none" } }}>
+          <IconButton
+            size="large"
+            onClick={handleOpenNavMenu}
+            color="inherit"
+            sx={{
+              transition: "transform 0.2s",
+              "&:hover": { transform: "scale(1.1)" },
+            }}
+          >
             <MenuIcon />
           </IconButton>
           <Menu
             anchorEl={anchorElNav}
             open={Boolean(anchorElNav)}
             onClose={handleCloseNavMenu}
+            sx={{ mt: 1 }}
           >
-            <MenuItem onClick={handleCloseNavMenu} component={Link} to="/">
+            <MenuItem component={Link} to="/" onClick={handleCloseNavMenu}>
               Home
             </MenuItem>
             <MenuItem
-              onClick={handleCloseNavMenu}
               component={Link}
               to={role === "deliveryPartner" ? "/active-orders" : "/shop"}
+              onClick={handleCloseNavMenu}
             >
               {role === "deliveryPartner" ? "Active Orders" : "Shop"}
             </MenuItem>
+            <Divider />
             <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
           </Menu>
         </Box>
 
-        {/* Desktop Links */}
-        <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" }, gap: 2 }}>
-          <Button color="inherit" component={Link} to="/">
-            Home
-          </Button>
+        {/* 💻 Desktop Menu */}
+        <Box
+          sx={{
+            display: { xs: "none", md: "flex" },
+            gap: 3,
+            alignItems: "center",
+          }}
+        >
+          {[
+            { label: "Home", to: "/" },
+            {
+              label: role === "deliveryPartner" ? "Active Orders" : "Shop",
+              to: role === "deliveryPartner" ? "/active-orders" : "/shop",
+            },
+          ].map((item) => (
+            <Button
+              key={item.label}
+              component={Link}
+              to={item.to}
+              sx={{
+                color: "white",
+                fontWeight: 500,
+                textTransform: "capitalize",
+                position: "relative",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  bottom: 0,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: 0,
+                  height: "2px",
+                  background: "#fff",
+                  transition: "width 0.3s ease",
+                },
+                "&:hover::after": { width: "80%" },
+              }}
+            >
+              {item.label}
+            </Button>
+          ))}
+
           <Button
-            color="inherit"
-            component={Link}
-            to={role === "deliveryPartner" ? "/active-orders" : "/shop"}
+            onClick={handleLogoutClick}
+            sx={{
+              color: "#fffb00",
+              fontWeight: 600,
+              textTransform: "capitalize",
+              "&:hover": {
+                color: "white",
+                background: "rgba(255,255,255,0.1)",
+              },
+            }}
           >
-            {role === "deliveryPartner" ? "Active Orders" : "Shop"}
-          </Button>
-          <Button color="inherit" onClick={handleLogoutClick}>
             Logout
           </Button>
         </Box>
 
-        {/* Profile + Dropdown */}
-        <Box sx={{ flexGrow: 0 }}>
-          <Tooltip title="Open settings">
+        {/* 👤 Profile Dropdown */}
+        <Box>
+          <Tooltip title="Profile settings">
             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              {isAuthenticated && profileImage ? (
-                <Avatar src={profileImage} />
-              ) : (
-                <Avatar />
-              )}
+              <Avatar
+                src={isAuthenticated && profileImage ? profileImage : ""}
+                alt="Profile"
+                sx={{
+                  border: "2px solid white",
+                  transition: "transform 0.3s",
+                  "&:hover": { transform: "scale(1.1)" },
+                }}
+              />
             </IconButton>
           </Tooltip>
+
           <Menu
             anchorEl={anchorElUser}
             open={Boolean(anchorElUser)}
             onClose={handleCloseUserMenu}
-            sx={{ mt: "45px" }}
+            sx={{ mt: 1.5 }}
           >
             {!isAuthenticated ? (
               <MenuItem
@@ -201,6 +244,7 @@ function Navbar() {
               </MenuItem>
             )}
 
+            <Divider />
             <MenuItem
               onClick={handleCloseUserMenu}
               component={Link}
