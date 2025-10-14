@@ -4,8 +4,9 @@ import { apiResponse } from "../utils/apiResponse.js";
 
 export const checkAdmin = asyncHandler(async (req, res, next) => {
     try {
+
         if (req.user && req.user.role === "admin") {
-            // console.log("done")
+            console.log(req.body);
             next();
         } else {
             return res

@@ -6,16 +6,18 @@ import {
 } from "../controllers/category.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkAdmin } from "../middlewares/checkAdmin.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
+
 
 const router = Router();
 
 router.route("/createCategory").post(
     verifyJWT,
     checkAdmin,
+    upload.single("categoryImage"),
     createCategory
 );      // Admin use
 router.route("/getAllCategories").get(
-    verifyJWT,
     getAllCategories
 );     // Public use
 router.route("/deleteCategory").delete(

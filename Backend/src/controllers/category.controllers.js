@@ -2,12 +2,14 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Category } from "../models/category.models.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { apiError } from "../utils/apiError.js";
+import { uploadOnCloudinary } from "../cloudinary.js";
 
 const createCategory = asyncHandler(async (req, res) => {
+
     const { name, description } = req.body;
     console.log(name)
     console.log(description)
-    if (!name || name?.trim() === "") {
+    if (name?.trim() === "") {
         throw new apiError(400, "Category name is required");
     }
 
@@ -16,9 +18,21 @@ const createCategory = asyncHandler(async (req, res) => {
         throw new apiError(409, "Category already exists");
     }
 
+    const categoryImagePath = req.file?.path;
+
+    if (!categoryImagePath) {
+        throw new apiError(401, "please upload product image");
+    }
+
+    const categoryImage = await uploadOnCloudinary(categoryImagePath);
+    if (!categoryImage) {
+        throw new apiError(400, "error while uploading");
+    }
+
     const category = await Category.create({
         name: name.trim(),
-        description: description?.trim() || ""
+        description: description?.trim() || "",
+        categoryImage: categoryImage.url,
     });
 
     return res
