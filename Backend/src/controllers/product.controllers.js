@@ -3,6 +3,7 @@ import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { uploadOnCloudinary } from "../cloudinary.js";
 import { Product } from "../models/product.models.js";
+import { Category } from "../models/category.models.js";
 import mongoose from "mongoose";
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -30,6 +31,13 @@ const createProduct = asyncHandler(async (req, res) => {
         throw new apiError(400, "Product already exists for this vendor");
     }
 
+    const categoryExists = await Category.findOne({ name: productCategory });
+    if (!categoryExists) {
+        throw new apiError(404, "Selcted Category doesn't exist");
+    }
+    console.log(categoryExists);
+    const categoryId = categoryExists._id;
+
     const productImagePath = req.file?.path;
 
     if (!productImagePath) {
@@ -46,7 +54,7 @@ const createProduct = asyncHandler(async (req, res) => {
         {
             productName,
             description,
-            productCategory,
+            productCategory: categoryId,
             price,
             discount: parseInt(discount, 10) || 0, // Default discount to 0 if not provided
             stock,
@@ -192,7 +200,7 @@ const toggleStock = asyncHandler(async (req, res) => {
 })
 
 const getAllProducts = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10 } = req.query; // Get page and limit from query parameters, default to page 1 and limit 10
+    const { page = 1, limit = 20 } = req.query; // Get page and limit from query parameters, default to page 1 and limit 10
 
     // Convert page and limit to integers
     const pageNumber = parseInt(page, 10);
@@ -245,6 +253,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
     // Get the total count of products
     const totalProducts = await Product.countDocuments();
+    // console.log("here", products);
 
     // Calculate total pages
     const totalPages = Math.ceil(totalProducts / limitNumber);
