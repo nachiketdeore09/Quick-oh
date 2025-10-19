@@ -17,7 +17,6 @@ const Home = () => {
       <Hero />
       <Categories />
       <InfoSection />
-      <Footer />
     </>
   );
 };

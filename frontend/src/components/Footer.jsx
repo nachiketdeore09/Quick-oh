@@ -10,6 +10,9 @@ const Footer = () => {
         color: "white",
         mt: 10,
         py: 6,
+        margin: "0",
+        padding: "10px",
+        position: "static",
       }}
     >
       <Container maxWidth="lg">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -14,9 +14,13 @@ import {
   Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import LogoutModal from "./Logout-Popup";
+import LogoutModal from "./Modals/Logout-Popup";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import Badge from "@mui/material/Badge";
+import Popover from "@mui/material/Popover";
+import moment from "moment";
 
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = useState(null);
@@ -25,16 +29,64 @@ function Navbar() {
   const navigate = useNavigate();
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
   const { profileImage, updateProfileImage, role, updateRole } = useUser();
+  const [anchorElBell, setAnchorElBell] = useState(null);
+  const [currentOrder, setCurrentOrder] = useState(null);
+  const [hasNewOrder, setHasNewOrder] = useState(false);
 
   const handleOpenNavMenu = (e) => setAnchorElNav(e.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleOpenUserMenu = (e) => setAnchorElUser(e.currentTarget);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
+  useEffect(() => {
+    if (isAuthenticated) fetchUserOrders();
+  }, [isAuthenticated]);
+
+  const fetchUserOrders = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:8000/api/v1/order/getUserOrderHistory",
+        {
+          withCredentials: true,
+        }
+      );
+
+      const orders = res.data.data || [];
+      if (orders.length === 0) {
+        setCurrentOrder(null);
+        return;
+      }
+
+      // Find the latest non-completed order
+      const activeOrder = orders.find(
+        (order) =>
+          order.status !== "Completed" &&
+          order.status !== "Delivered" &&
+          order.status !== "Cancelled"
+      );
+
+      if (activeOrder) {
+        setCurrentOrder(activeOrder);
+        setHasNewOrder(true);
+      } else {
+        setCurrentOrder(null);
+      }
+    } catch (error) {
+      console.error("Error fetching user orders:", error);
+    }
+  };
+
+  const handleBellClick = (event) => {
+    setAnchorElBell(event.currentTarget);
+    setHasNewOrder(false);
+  };
+
   const handleLogoutClick = () => {
     setShowModal(true);
     handleCloseUserMenu();
   };
+
+  const handleBellClose = () => setAnchorElBell(null);
 
   const confirmLogout = async () => {
     try {
@@ -186,7 +238,164 @@ function Navbar() {
           >
             Logout
           </Button>
+          {/* {reminder bell button} */}
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              mr: 1,
+            }}
+          >
+            <IconButton color="inherit" onClick={handleBellClick}>
+              <Badge color="error" variant={hasNewOrder ? "dot" : "standard"}>
+                <NotificationsIcon sx={{ color: "white" }} />
+              </Badge>
+            </IconButton>
+
+            <Popover
+              open={Boolean(anchorElBell)}
+              anchorEl={anchorElBell}
+              onClose={handleBellClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "center",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "center",
+              }}
+              PaperProps={{
+                sx: { p: 2, minWidth: 220 },
+              }}
+            >
+              {currentOrder ? (
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    Current Order
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Order ID:{" "}
+                    <span style={{ color: "#007cf0", fontWeight: 500 }}>
+                      {currentOrder._id.slice(-6)}
+                    </span>
+                  </Typography>
+                  <Typography variant="body2">
+                    Status:{" "}
+                    <b
+                      style={{
+                        color:
+                          currentOrder.status === "Preparing"
+                            ? "#f57c00"
+                            : currentOrder.status === "Out for Delivery"
+                            ? "#0288d1"
+                            : "#43a047",
+                      }}
+                    >
+                      {currentOrder.status}
+                    </b>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {moment(currentOrder.createdAt).fromNow()}
+                  </Typography>
+                  <Button
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 1, textTransform: "none" }}
+                    onClick={() => {
+                      handleBellClose();
+                      navigate(`/delivery-details/${currentOrder._id}`);
+                    }}
+                  >
+                    View Details
+                  </Button>
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ textAlign: "center" }}>
+                  💤 No current orders
+                </Typography>
+              )}
+            </Popover>
+          </Box>
         </Box>
+
+        {/* 🔔 Reminder Bell */}
+        {/* <Box
+          sx={{
+            display: { xs: "none", md: "flex" },
+            alignItems: "center",
+            mr: 1,
+          }}
+        >
+          <IconButton color="inherit" onClick={handleBellClick}>
+            <Badge color="error" variant={hasNewOrder ? "dot" : "standard"}>
+              <NotificationsIcon sx={{ color: "white" }} />
+            </Badge>
+          </IconButton>
+
+          <Popover
+            open={Boolean(anchorElBell)}
+            anchorEl={anchorElBell}
+            onClose={handleBellClose}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "center",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+            PaperProps={{
+              sx: { p: 2, minWidth: 220 },
+            }}
+          >
+            {currentOrder ? (
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Current Order
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Order ID:{" "}
+                  <span style={{ color: "#007cf0", fontWeight: 500 }}>
+                    {currentOrder._id.slice(-6)}
+                  </span>
+                </Typography>
+                <Typography variant="body2">
+                  Status:{" "}
+                  <b
+                    style={{
+                      color:
+                        currentOrder.status === "Preparing"
+                          ? "#f57c00"
+                          : currentOrder.status === "Out for Delivery"
+                          ? "#0288d1"
+                          : "#43a047",
+                    }}
+                  >
+                    {currentOrder.status}
+                  </b>
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {moment(currentOrder.createdAt).fromNow()}
+                </Typography>
+                <Button
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 1, textTransform: "none" }}
+                  onClick={() => {
+                    handleBellClose();
+                    navigate(`/delivery-details/${currentOrder._id}`);
+                  }}
+                >
+                  View Details
+                </Button>
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ textAlign: "center" }}>
+                💤 No current orders
+              </Typography>
+            )}
+          </Popover>
+        </Box> */}
 
         {/* 👤 Profile Dropdown */}
         <Box>

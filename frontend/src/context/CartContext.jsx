@@ -82,25 +82,38 @@ export const CartProvider = ({ children }) => {
   const fetchCart = async () => {
     // console.log(isAuthenticated);
     if (!isAuthenticated) return;
-    if (role !== "deliveryPartner") {
-      try {
-        const res = await axios.get(
-          "http://localhost:8000/api/v1/cart/getCartInfo",
-          {
-            withCredentials: true,
-          }
-        );
-        // console.log("res from fetchCart: ", res);
+    if (role === "deliveryPartner") return;
+    try {
+      const res = await axios.get(
+        "http://localhost:8000/api/v1/cart/getCartInfo",
+        {
+          withCredentials: true,
+        }
+      );
 
-        const cartData = res.data.data.cart.items.map((item) => ({
-          ...item.product,
-          quantity: item.quantity,
-        }));
+      // console.log("res from fetchCart: ", res);
+      const cart = res?.data?.data?.cart;
 
-        setCartItems(cartData);
-      } catch (error) {
+      if (!cart || !Array.isArray(cart.items)) {
+        // No cart exists yet for this user
+        setCartItems([]);
+        console.log("No cart found yet for this user. Initialized empty cart.");
+        return;
+      }
+
+      const cartData = res.data.data.cart.items.map((item) => ({
+        ...item.product,
+        quantity: item.quantity,
+      }));
+
+      setCartItems(cartData);
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.log("No cart found yet for this user.");
+      } else {
         console.error("Failed to load cart:", error);
       }
+      setCartItems([]);
     }
   };
 

@@ -1,0 +1,35 @@
+.registerPage {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ✅ Make video fill the entire screen */
+.registerBgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* ✅ Add a dark overlay to improve readability */
+.videoOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(135deg, #b6dafe, #a0d0f7);
+  z-index: 1;
+}
+/* rgba(10, 10, 10, 0.55) */
+/* Responsive */
+@media (max-width: 600px) {
+  .registerBgVideo {
+    object-position: center;
+  }
+}

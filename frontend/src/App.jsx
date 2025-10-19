@@ -14,39 +14,45 @@ import DeliveryPartnerLogin from "./pages/DeliveryPartnerLogin.jsx";
 import ActiveOrders from "./pages/ActiveOrders.jsx";
 import DeliveryDetails from "./pages/DeliveryDetails.jsx";
 import { ToastContainer } from "react-toastify";
-import PaymentPage from "./pages/PaymentPage";
+import Footer from "./components/Footer.jsx";
+
+import "./App.css";
 
 function App() {
   return (
     <Router>
-      <ToastContainer />
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/shop"
-          element={
-            <ProtectedRoute>
-              <Shop />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/vendor/login" element={<VendorLogin />} />
-        <Route path="/vendor/Dashboard" element={<VendorDashboard />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/delivery-login" element={<DeliveryPartnerLogin />} />
-        <Route path="/active-orders" element={<ActiveOrders />} />
-        <Route
-          path="/delivery-details/:orderId"
-          element={<DeliveryDetails />}
-        />
-        <Route path="/payment" element={<PaymentPage />} />
-        {/* <Route path="/delivery-dashboard" element={} /> */}
-        {/* Add more routes as needed */}
-      </Routes>
+      <div className="App">
+        <ToastContainer />
+        <Navbar />
+        <main className="content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/shop"
+              element={
+                <ProtectedRoute>
+                  <Shop />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/vendor/login" element={<VendorLogin />} />
+            <Route path="/vendor/Dashboard" element={<VendorDashboard />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/delivery-login" element={<DeliveryPartnerLogin />} />
+            <Route path="/active-orders" element={<ActiveOrders />} />
+            <Route
+              path="/delivery-details/:orderId"
+              element={<DeliveryDetails />}
+            />
+            <Route path="/delivery-dashboard" element={<Profile />} />
+            {/* Add more routes as needed */}
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
   );
 }

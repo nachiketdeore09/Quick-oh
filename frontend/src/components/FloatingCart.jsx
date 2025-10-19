@@ -2,20 +2,32 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import styles from "./FloatingCart.module.css";
-import LocationPickerModal from "./LocationPickerModal";
+import LocationPickerModal from "./Modals/LocationPickerModal";
+import PaymentModal from "./Modals/PaymentModal";
+import {
+  Box,
+  Typography,
+  Button,
+  IconButton,
+  Paper,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  Tooltip,
+} from "@mui/material";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 
 const FloatingCart = () => {
-  const { cartItems, addToCart, removeOneItem, removeFromCart, clearCart } =
-    useCart();
+  const { cartItems, addToCart, removeOneItem, removeFromCart } = useCart();
   const [showCart, setShowCart] = useState(false);
   const [shippingAddress, setShippingAddress] = useState("");
-  // for the maps
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState("");
-  const [coordinates, setCoordinates] = useState(null);
-
-  // for redirecting
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
 
   const totalPrice = cartItems.reduce(
@@ -24,34 +36,29 @@ const FloatingCart = () => {
     0
   );
 
-  // to place order from the cart
   const handlePlaceOrder = async () => {
     if (!shippingAddress || !shippingAddress.address.trim()) {
-      alert("Please enter a shipping address");
+      alert("Please select a delivery location");
       return;
     }
-    let address = shippingAddress.address;
-    let latitude = shippingAddress.latitude;
-    let longitude = shippingAddress.longitude;
 
     try {
       const res = await axios.post(
         "http://localhost:8000/api/v1/order/createOrder",
         {
-          address: address,
-          latitude: latitude,
-          longitude: longitude,
+          address: shippingAddress.address,
+          latitude: shippingAddress.latitude,
+          longitude: shippingAddress.longitude,
         },
         { withCredentials: true }
       );
       alert("Order placed successfully!");
       setShowCart(false);
-      navigate("/payment", {
-        state: {
-          amount: Math.round(totalPrice), // Pass total price (rounded)
-          orderId: res.data.data._id, // Optional: send orderId
-        },
+      setSelectedOrder({
+        amount: Math.round(totalPrice),
+        orderId: res.data.data._id,
       });
+      setShowPaymentModal(true);
     } catch (error) {
       console.error("Order placement failed:", error);
       alert("Failed to place order");
@@ -60,79 +67,230 @@ const FloatingCart = () => {
 
   return (
     <>
+      {/* Floating Cart Icon */}
       {cartItems.length > 0 && (
-        <div className={styles.cartIcon} onClick={() => setShowCart(true)}>
-          🛒 {cartItems.length}
-        </div>
+        <Tooltip title="View Cart">
+          <Box
+            onClick={() => setShowCart(true)}
+            sx={{
+              position: "fixed",
+              bottom: 25,
+              right: 30,
+              backgroundColor: "#1976d2",
+              color: "white",
+              borderRadius: "50%",
+              width: 60,
+              height: 60,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              boxShadow: 3,
+              zIndex: 1200,
+              transition: "transform 0.2s ease-in-out",
+              "&:hover": { transform: "scale(1.1)" },
+            }}
+          >
+            <ShoppingCartIcon fontSize="large" />
+            <Box
+              sx={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                backgroundColor: "white",
+                color: "#1976d2",
+                fontSize: "0.8rem",
+                borderRadius: "50%",
+                width: 22,
+                height: 22,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                boxShadow: 1,
+              }}
+            >
+              {cartItems.length}
+            </Box>
+          </Box>
+        </Tooltip>
       )}
 
+      {/* Cart Popup */}
       {showCart && (
-        <div className={styles.cartPopup}>
-          <h3>Your Cart</h3>
-          <ul className={styles.cartList}>
+        <Paper
+          elevation={5}
+          sx={{
+            position: "fixed",
+            bottom: 90,
+            right: 25,
+            width: 380,
+            backgroundColor: "#f9f9f9",
+            borderRadius: 3,
+            p: 3,
+            zIndex: 1300,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
+            <Typography variant="h6" sx={{ color: "#1976d2", fontWeight: 600 }}>
+              Your Cart
+            </Typography>
+            <IconButton size="small" onClick={() => setShowCart(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          <Divider sx={{ mb: 2 }} />
+
+          <List>
             {cartItems.map((item) => (
-              <li key={item._id} className={styles.cartItem}>
-                <div className={styles.productName}>{item.productName}</div>
-                <div className={styles.quantityControls}>
-                  <button onClick={() => removeOneItem(item)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => addToCart(item)}>+</button>
-                  <button
-                    className={styles.removeBtn}
-                    onClick={() => removeFromCart(item._id)}
+              <ListItem
+                key={item._id}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 1,
+                  p: 1,
+                  borderRadius: 2,
+                  backgroundColor: "#fff",
+                  boxShadow: 1,
+                }}
+              >
+                <ListItemText
+                  primary={item.productName}
+                  secondary={`₹${(
+                    item.price -
+                    (item.price * item.discount) / 100
+                  ).toFixed(2)} × ${item.quantity}`}
+                  sx={{ color: "#333" }}
+                />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => removeOneItem(item)}
+                    sx={{ color: "#1976d2" }}
                   >
-                    ✕
-                  </button>
-                </div>
-              </li>
+                    <RemoveIcon />
+                  </IconButton>
+                  <Typography>{item.quantity}</Typography>
+                  <IconButton
+                    size="small"
+                    onClick={() => addToCart(item)}
+                    sx={{ color: "#1976d2" }}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => removeFromCart(item._id)}
+                    sx={{ color: "red" }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                </Box>
+              </ListItem>
             ))}
-          </ul>
+          </List>
 
-          <p>Total: ₹{totalPrice.toFixed(2)}</p>
+          <Divider sx={{ mt: 2, mb: 2 }} />
 
-          {/*--- For selcting address ---*/}
-          <button onClick={() => setShowLocationModal(true)}>
+          <Typography
+            variant="subtitle1"
+            sx={{ fontWeight: 600, color: "#1976d2", mb: 2 }}
+          >
+            Total: ₹{totalPrice.toFixed(2)}
+          </Typography>
+
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() => setShowLocationModal(true)}
+            sx={{
+              borderColor: "#1976d2",
+              color: "#1976d2",
+              mb: 2,
+              "&:hover": { backgroundColor: "#1976d2", color: "white" },
+            }}
+          >
             Select Delivery Location
-          </button>
+          </Button>
+
           {showLocationModal && (
             <LocationPickerModal
               onClose={() => setShowLocationModal(false)}
               onSelect={({ address, latitude, longitude }) => {
-                const fullAddress = {
-                  address,
-                  latitude: latitude,
-                  longitude: longitude,
-                };
-                console.log(fullAddress.latitude, fullAddress.longitude);
-                setShippingAddress(fullAddress);
-                setCoordinates({ latitude, longitude });
+                setShippingAddress({ address, latitude, longitude });
                 setShowLocationModal(false);
               }}
             />
           )}
 
-          {selectedAddress?.address && (
-            <p className={styles.selectedAddress}>
-              Selected Address: {shippingAddress.address}
-            </p>
+          {shippingAddress?.address && (
+            <Typography
+              variant="body2"
+              sx={{
+                mb: 2,
+                backgroundColor: "#e3f2fd",
+                p: 1,
+                borderRadius: 1,
+                color: "#1976d2",
+              }}
+            >
+              📍 {shippingAddress.address}
+            </Typography>
           )}
 
-          {/*--- PLacing order ---*/}
-          <button
-            className={styles.orderBtn}
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
             disabled={!shippingAddress.address}
-            onClick={() => handlePlaceOrder()}
+            onClick={handlePlaceOrder}
+            sx={{
+              fontWeight: "bold",
+              mb: 1,
+            }}
           >
             Place Order
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outlined"
+            color="error"
+            fullWidth
             onClick={() => setShowCart(false)}
-            className={styles.closeBtn}
           >
             Close
-          </button>
-        </div>
+          </Button>
+        </Paper>
+      )}
+
+      {/* payment pop-up */}
+      {showPaymentModal && selectedOrder && (
+        <PaymentModal
+          amount={selectedOrder.amount}
+          orderId={selectedOrder.orderId}
+          onClose={() => {
+            setShowPaymentModal(false);
+            navigate("/shop");
+          }}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            navigate(`/delivery-details/${selectedOrder.orderId}`);
+          }}
+          onFailure={() => {
+            setShowPaymentModal(false);
+            navigate("/shop");
+          }}
+        />
       )}
     </>
   );

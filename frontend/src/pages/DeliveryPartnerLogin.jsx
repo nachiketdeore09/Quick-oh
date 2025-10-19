@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import {
   Box,
@@ -7,24 +7,35 @@ import {
   Typography,
   Paper,
   Alert,
+  Slide,
+  Link as MuiLink,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext.jsx";
 import { useSocket } from "../context/SocketContext.jsx";
 
 function DeliveryPartnerLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { updateProfileImage, updateRole } = useUser();
   const socket = useSocket();
 
-  const handleLogin = async () => {
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
     try {
       const res = await axios.post(
         "http://localhost:8000/api/v1/users/login",
-        { email, password },
+        formData,
         { withCredentials: true }
       );
 
@@ -38,11 +49,11 @@ function DeliveryPartnerLogin() {
         socket?.emit("joinRoom", `delivery-partner-${user._id}`);
         navigate("/delivery-dashboard");
       } else {
-        setErrorMsg("Access denied: Not a delivery partner");
+        setError("Access denied: Not a delivery partner");
       }
-    } catch (error) {
-      console.error(error);
-      setErrorMsg(error?.response?.data?.message || "Login failed");
+    } catch (err) {
+      console.error(err);
+      setError(err?.response?.data?.message || "Login failed");
     }
   };
 
@@ -50,127 +61,122 @@ function DeliveryPartnerLogin() {
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(to right, #e0f7fa, #f9fafb)",
+        background: "linear-gradient(135deg, #007cf0, #00dfd8)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         px: 2,
       }}
     >
-      <Paper
-        elevation={6}
-        sx={{
-          padding: 4,
-          maxWidth: 500,
-          width: "100%",
-          borderRadius: 4,
-        }}
-      >
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
-          Delivery Partner Login
-        </Typography>
-
-        {errorMsg && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errorMsg}
-          </Alert>
-        )}
-
-        <TextField
-          fullWidth
-          label="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          margin="normal"
-        />
-
-        <TextField
-          fullWidth
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          margin="normal"
-        />
-
-        <Button
-          variant="contained"
-          fullWidth
-          sx={{ mt: 3, py: 1.5 }}
-          onClick={handleLogin}
+      <Slide direction="up" in={true} mountOnEnter unmountOnExit>
+        <Paper
+          elevation={10}
+          sx={{
+            p: 5,
+            maxWidth: 500,
+            width: "100%",
+            borderRadius: 4,
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            boxShadow: "0 4px 25px rgba(0,0,0,0.4)",
+          }}
         >
-          Login
-        </Button>
-      </Paper>
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            gutterBottom
+            textAlign="center"
+            sx={{
+              background: "linear-gradient(90deg, #007cf0, #00dfd8)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Delivery Partner Login
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              margin="normal"
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": { borderColor: "#555" },
+                  "&:hover fieldset": { borderColor: "#00dfd8" },
+                  "&.Mui-focused fieldset": { borderColor: "#00dfd8" },
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              margin="normal"
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": { borderColor: "#555" },
+                  "&:hover fieldset": { borderColor: "#00dfd8" },
+                  "&.Mui-focused fieldset": { borderColor: "#00dfd8" },
+                },
+              }}
+            />
+
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              sx={{
+                mt: 4,
+                py: 1.5,
+                fontSize: "1rem",
+                borderRadius: "9999px",
+                background: "linear-gradient(90deg, #007cf0, #00dfd8)",
+                textTransform: "none",
+                fontWeight: "bold",
+              }}
+            >
+              Login
+            </Button>
+
+            <Typography
+              variant="body2"
+              textAlign="center"
+              sx={{ mt: 3, color: "#555" }}
+            >
+              Not registered as a delivery partner?{" "}
+              <MuiLink
+                sx={{
+                  color: "#007cf0",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+                onClick={() => navigate("/delivery/register")}
+              >
+                Register here
+              </MuiLink>
+            </Typography>
+          </Box>
+        </Paper>
+      </Slide>
     </Box>
   );
 }
 
 export default DeliveryPartnerLogin;
-
-// import React, { useState } from "react";
-// import axios from "axios";
-// import { useNavigate } from "react-router-dom";
-// import styles from "./DeliveryPartnerLogin.module.css";
-// import { useUser } from "../context/UserContext.jsx";
-// import { useSocket } from "../context/SocketContext.jsx";
-
-// function DeliveryPartnerLogin() {
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const navigate = useNavigate();
-//   const { updateProfileImage, updateRole } = useUser();
-//   const socket = useSocket();
-
-//   const handleLogin = async () => {
-//     try {
-//       const res = await axios.post(
-//         "http://localhost:8000/api/v1/users/login",
-//         { email, password },
-//         { withCredentials: true }
-//       );
-//       console.log(res.data.data.user);
-//       if (res.data.data.user.role === "deliveryPartner") {
-//         alert("Login successful");
-//         updateRole("deliveryPartner");
-//         localStorage.setItem("isAuthenticated", "true");
-//         updateProfileImage(res.data.data.user.profilePicture);
-
-//         //join the room
-//         socket?.emit("joinRoom", `delivery-partner-${res.data.data.user._id}`);
-//         //redirect to dashboard
-//         navigate("/delivery-dashboard");
-//       } else {
-//         alert("Access denied: Not a delivery partner");
-//       }
-//     } catch (error) {
-//       console.log(error);
-//       alert("Login failed: " + error?.response?.data?.message);
-//     }
-//   };
-
-//   return (
-//     <div className={styles.loginContainer}>
-//       <h2>Delivery Partner Login</h2>
-//       <input
-//         type="email"
-//         placeholder="Email"
-//         value={email}
-//         onChange={(e) => setEmail(e.target.value)}
-//         className={styles.input}
-//       />
-//       <input
-//         type="password"
-//         placeholder="Password"
-//         value={password}
-//         onChange={(e) => setPassword(e.target.value)}
-//         className={styles.input}
-//       />
-//       <button onClick={handleLogin} className={styles.loginBtn}>
-//         Login
-//       </button>
-//     </div>
-//   );
-// }
-
-// export default DeliveryPartnerLogin;

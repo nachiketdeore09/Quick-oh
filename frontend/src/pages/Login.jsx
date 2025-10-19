@@ -7,6 +7,8 @@ import {
   Paper,
   Alert,
   Link as MuiLink,
+  Slide,
+  Fade,
 } from "@mui/material";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -31,16 +33,17 @@ const Login = () => {
     phoneNumber: "",
     password: "",
   });
-  const [errors, setErrors] = useState([]); // for storing all the errors
+  const [errors, setErrors] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setErrors({});
     try {
       loginSchema.parse(formData);
 
@@ -50,7 +53,6 @@ const Login = () => {
         { withCredentials: true }
       );
 
-      console.log("Login successful:", response.data);
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem(
         "profileImage",
@@ -59,102 +61,213 @@ const Login = () => {
 
       updateProfileImage(response.data.data.user.profilePicture);
       updateRole("customer");
+
+      toast.success("Login successful!");
       navigate("/shop");
     } catch (err) {
       if (err instanceof z.ZodError) {
-        // ✅ Collect all Zod validation messages
         const messages = err._zod.def.map((e) => e.message);
         setErrors(messages);
       } else {
         console.error("Error during login:", err);
-        setErrors(["Login failed. Please check your credentials."]);
+        setErrors({
+          general:
+            err?.response?.data?.message ||
+            "Login failed. Please check your credentials.",
+        });
       }
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(to right, #e0f7fa, #f9fafb)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        px: 2,
+    <div
+      style={{
+        position: "relative",
+        height: "100vh",
+        overflow: "hidden",
       }}
     >
-      <Paper
-        elevation={6}
+      {/* 🔹 Dark Overlay */}
+
+      <Box
         sx={{
-          padding: 4,
-          maxWidth: 500,
-          width: "100%",
-          borderRadius: 4,
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          px: 2,
+          position: "relative",
+          zIndex: 2,
+          paddingTop: "2rem",
+          paddingBottom: "2rem",
         }}
       >
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Login
-        </Typography>
+        <Slide direction="up" in={true} mountOnEnter unmountOnExit>
+          <Fade in timeout={700}>
+            <Paper
+              elevation={8}
+              sx={{
+                p: 4,
+                maxWidth: 500,
+                width: "100%",
+                borderRadius: 5,
+                backdropFilter: "blur(12px)",
+                background: "rgba(255, 255, 255, 0.25)",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+              }}
+            >
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                gutterBottom
+                textAlign="center"
+                sx={{
+                  background: "linear-gradient(90deg, #007cf0, #00dfd8)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Welcome Back
+              </Typography>
+              {errors.length > 0 && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <ul style={{ color: "#ff4d4d", marginLeft: "1rem" }}>
+                    {errors.map((err, index) => (
+                      <li
+                        key={index}
+                        style={{ marginBottom: "4px", fontSize: "0.9rem" }}
+                      >
+                        {err}
+                      </li>
+                    ))}
+                  </ul>
+                </Box>
+              )}
 
-        {errors.length > 0 && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <Typography fontWeight="bold">Please fix the following:</Typography>
-            <ul style={{ marginLeft: "1.2rem" }}>
-              {errors.map((msg, i) => (
-                <li key={i}>{msg}</li>
-              ))}
-            </ul>
-          </Alert>
-        )}
+              <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  margin="normal"
+                  required
+                  InputProps={{
+                    style: { color: "#555" },
+                  }}
+                  InputLabelProps={{
+                    style: { color: "#555" },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#555",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#00dfd8",
+                      },
+                    },
+                  }}
+                />
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Phone Number"
-            name="phoneNumber"
-            type="tel"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            margin="normal"
-            required
-          />
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  name="phoneNumber"
+                  type="tel"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  margin="normal"
+                  required
+                  InputProps={{
+                    style: { color: "#555" },
+                  }}
+                  InputLabelProps={{
+                    style: { color: "#555" },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#555",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#00dfd8",
+                      },
+                    },
+                  }}
+                />
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{ mt: 3, py: 1.5 }}
-          >
-            Login
-          </Button>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  margin="normal"
+                  required
+                  InputProps={{
+                    style: { color: "#555" },
+                  }}
+                  InputLabelProps={{
+                    style: { color: "#555" },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#555",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#00dfd8",
+                      },
+                    },
+                  }}
+                />
 
-          <Typography mt={2} textAlign="center">
-            Don't have an account?{" "}
-            <MuiLink component={Link} to="/register" underline="hover">
-              Register here
-            </MuiLink>
-          </Typography>
-        </Box>
-      </Paper>
-    </Box>
+                <Button
+                  fullWidth
+                  type="submit"
+                  variant="contained"
+                  sx={{
+                    mt: 4,
+                    py: 1.5,
+                    fontSize: "1rem",
+                    borderRadius: "9999px",
+                    background: "linear-gradient(90deg, #007cf0, #00dfd8)",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Login
+                </Button>
+
+                <Typography
+                  mt={2}
+                  textAlign="center"
+                  fontSize="0.9rem"
+                  sx={{ color: "#555" }}
+                >
+                  Don’t have an account?{" "}
+                  <MuiLink
+                    component={Link}
+                    to="/register"
+                    underline="hover"
+                    sx={{
+                      color: "#00dfd8",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Register here
+                  </MuiLink>
+                </Typography>
+              </Box>
+            </Paper>
+          </Fade>
+        </Slide>
+      </Box>
+    </div>
   );
 };
 
