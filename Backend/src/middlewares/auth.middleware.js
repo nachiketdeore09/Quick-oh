@@ -2,34 +2,65 @@ import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.models.js";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { generateRefreshAndAccessTokens } from "../controllers/user.controllers.js"; // import helper
 
-export const verifyJWT = asyncHandler(async (req, _, next) => {
+export const verifyJWT = asyncHandler(async (req, res, next) => {
+    console.log("AccessToken Cookie:", req.cookies?.accessToken);
+    console.log("RefreshToken Cookie:", req.cookies?.refreshToken);
+    console.log("Authorization Header:", req.header("Authorization"));
     try {
-        // accepting token from the cookies or header
-        const token = await req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+        const token =
+            req.cookies?.accessToken ||
+            req.header("Authorization")?.replace("Bearer ", "");
 
         if (!token) {
-            throw new apiError(400, "Unauthorised access");
+            console.log("No token found -> Unauthorized");
+            throw new apiError(401, "Unauthorized access");
         }
 
-        // decoding the token to retrieve the users id
-        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        try {
+            // ✅ Verify access token normally
+            const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            const user = await User.findById(decoded._id).select(
+                "-password -refreshToken"
+            );
 
-        const user = await User.findById(decodedToken._id).select(
-            "-password -refreshToken"
-        )
+            if (!user) throw new apiError(401, "Invalid access token");
 
-        if (!user) {
-            throw new apiError(400, "invalid access token");
+            req.user = user;
+            return next();
+        } catch (error) {
+            // ✅ If token expired, try refreshing it
+            if (error.name === "TokenExpiredError") {
+                const refreshToken = req.cookies?.refreshToken;
+                if (!refreshToken) throw new apiError(401, "Session expired. Please log in again.");
+
+                const decodedRefresh = jwt.verify(
+                    refreshToken,
+                    process.env.REFRESH_TOKEN_SECRET
+                );
+
+                const user = await User.findById(decodedRefresh._id);
+                if (!user || user.refreshToken !== refreshToken)
+                    throw new apiError(401, "Invalid refresh token. Please log in again.");
+
+                // ✅ Generate new tokens
+                const { accessToken } = await generateRefreshAndAccessTokens(user._id);
+
+                // ✅ Set new cookie for access token
+                res.cookie("accessToken", accessToken, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: "none",
+                });
+
+                req.user = user;
+                return next();
+            } else {
+                throw new apiError(401, "Invalid access token");
+            }
         }
-
-        // adding a additional user object to the req so that it can be used in further secured controllers
-        req.user = user;
-        // console.log(user);
-        // console.log(req.body)
-        next();
-
     } catch (error) {
-        throw new apiError(400, error?.message || "Invalid access token");
+        throw new apiError(401, error?.message || "Unauthorized access");
     }
-})
+});

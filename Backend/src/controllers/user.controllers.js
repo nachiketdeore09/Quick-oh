@@ -4,6 +4,26 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { uploadOnCloudinary } from "../cloudinary.js";
 import { User } from "../models/user.models.js"
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
+
+const accessOptions = {
+    httpOnly: true,
+    secure: false, // change to true in production (with HTTPS)
+    sameSite: "lax", // allow cookies in same-site navigation
+    path: "/", // cookie valid across entire app
+    maxAge: parseInt(process.env.ACCESS_TOKEN_EXPIRY, 10) || 24 * 60 * 60 * 1000
+}
+
+const refreshOptions = {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    path: "/",
+    maxAge: parseInt(process.env.REFRESH_TOKEN_EXPIRY, 10) || 7 * 24 * 60 * 60 * 1000,
+}
+
+
 
 const generateRefreshAndAccessTokens = async (userId) => {
     try {
@@ -80,14 +100,11 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser) {
         throw new apiError(500, "Error while creating error");
     }
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
+
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie("accessToken", accessToken, accessOptions)
+        .cookie("refreshToken", refreshToken, refreshOptions)
         .json(
             new apiResponse(
                 200,
@@ -133,15 +150,12 @@ const loginUser = asyncHandler(async (req, res) => {
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     //this option of cookies make cookies secure and immodifiable from the front end . cookies by default are modifiable 
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
+
     console.log("Login done");
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie("accessToken", accessToken, accessOptions)
+        .cookie("refreshToken", refreshToken, refreshOptions)
         .json(
             new apiResponse(
                 200,
@@ -166,15 +180,12 @@ const logoutUser = asyncHandler(async (req, res) => {
         }
     )
 
-    const option = {
-        httpOnly: true,
-        secure: true
-    }
+
     console.log("Logout done");
     return res
         .status(200)
-        .clearCookie("accessToken", option)
-        .clearCookie("refreshToken", option)
+        .clearCookie("accessToken", accessOptions)
+        .clearCookie("refreshToken", refreshOptions)
         .json(
             new apiResponse(
                 200,
@@ -185,7 +196,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 })
 
 const refreshAccessTokens = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken;
     if (!incomingRefreshToken) {
         throw new apiError(401, "unauthorised access");
     }
@@ -205,17 +216,14 @@ const refreshAccessTokens = asyncHandler(async (req, res) => {
             throw new apiError(401, "Refresh Token expired , please login");
         }
 
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
+
 
         const { accessToken, newRefreshToken } = await generateRefreshAndAccessTokens(user._id);
 
         return res
             .status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", newRefreshToken, options)
+            .cookie("accessToken", accessToken, accessOptions)
+            .cookie("refreshToken", newRefreshToken, refreshOptions)
             .json(
                 new apiResponse(
                     200,
@@ -349,6 +357,7 @@ const updateUserProfilePicture = asyncHandler(async (req, res) => {
 // TODO -> further i have to write the getUserOrderHistory and getUserCart controller
 
 export {
+    generateRefreshAndAccessTokens,
     registerUser,
     loginUser,
     logoutUser,
