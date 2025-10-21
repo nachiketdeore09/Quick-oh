@@ -15,7 +15,7 @@ connectDB().then(
         const server = http.createServer(app); // for the app server
         initSocket(server); // socket io server
         //listining
-        server.listen(process.env.PORT || 8000, () => {
+        server.listen(process.env.PORT, () => {
             console.log(`server is listning on port: ${process.env.PORT}`);
         })
         server.on("error", (error) => {

@@ -7,21 +7,25 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const accessOptions = {
     httpOnly: true,
-    secure: false, // change to true in production (with HTTPS)
-    sameSite: "lax", // allow cookies in same-site navigation
-    path: "/", // cookie valid across entire app
-    maxAge: parseInt(process.env.ACCESS_TOKEN_EXPIRY, 10) || 24 * 60 * 60 * 1000
-}
+    secure: isProduction, // true for Render (HTTPS)
+    sameSite: isProduction ? "none" : "lax", // allow cross-site cookies
+    path: "/",
+    maxAge: parseInt(process.env.ACCESS_TOKEN_EXPIRY, 10) || 24 * 60 * 60 * 1000,
+};
 
 const refreshOptions = {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     path: "/",
-    maxAge: parseInt(process.env.REFRESH_TOKEN_EXPIRY, 10) || 7 * 24 * 60 * 60 * 1000,
-}
+    maxAge:
+        parseInt(process.env.REFRESH_TOKEN_EXPIRY, 10) ||
+        7 * 24 * 60 * 60 * 1000,
+};
 
 
 

@@ -7,10 +7,15 @@ const app = express();
 
 app.use(cors(
     {
-        origin: "http://localhost:5173",
+        origin: ["http://localhost:5173",
+            "https://quick-oh.onrender.com",
+        ],
         credentials: true
     }
 ))
+
+//used to access cookies from the browser to perform CRED opertaions
+app.use(cookieParser())
 
 // size limit for json that server will accept
 app.use(express.json(
@@ -19,13 +24,15 @@ app.use(express.json(
     }
 ))
 
+
+
 // configuration to handle url response and changes done in url
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
 //this configuration is used to stored the img,svg,etc in a public folder in server
 app.use(express.static("public"))
-//used to access cookies from the browser to perform CRED opertaions
-app.use(cookieParser())
+
+
 
 //import routes
 import userRouter from "./routes/user.routes.js";
