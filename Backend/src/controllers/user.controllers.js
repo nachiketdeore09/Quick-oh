@@ -154,7 +154,8 @@ const loginUser = asyncHandler(async (req, res) => {
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     //this option of cookies make cookies secure and immodifiable from the front end . cookies by default are modifiable 
-
+    console.log(accessToken)
+    console.log(refreshToken)
     console.log("Login done");
     return res
         .status(200)

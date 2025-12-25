@@ -12,6 +12,7 @@ export const initSocket = (server) => {
     });
 
     io.on("connection", (socket) => {
+        // console.log(socket);
         console.log("New client connected:", socket.id);
 
         // Example: listen for room join
@@ -20,13 +21,34 @@ export const initSocket = (server) => {
             console.log(`Socket ${socket.id} joined room ${roomId}`);
         });
 
-        socket.on("disconnect", () => {
+        socket.on("joinOrderRoom", ({ orderId }) => {
+            socket.join(orderId);
+            console.log(`Joined order room: order:${orderId}`);
+        });
+
+        ///////// CHAT SOCKET ///////////
+        socket.on("join-chat", ({ orderId }) => {
+            socket.join(orderId);
+        });
+
+        socket.on("chat-message", (message) => {
+            io.to(message.orderId).emit("chat-message", message);
+        });
+        ///////// CHAT SOCKET ///////////
+
+        socket.on("disconnect", (roomId) => {
+            socket.leave(roomId);
             console.log("Client disconnected:", socket.id);
         });
 
-        socket.on("updateLocation", ({ userId, latitude, longitude }) => {
+        socket.on("updateLocation", ({ orderId, latitude, longitude }) => {
             // Broadcast to anyone tracking this delivery partner
-            io.emit(`location-update-${userId}`, { latitude, longitude });
+            // io.emit(`location-update-${userId}`, { latitude, longitude });
+            console.log(`joined room ${orderId}`);
+            io.to(orderId).emit("partner-location-update", {
+                latitude,
+                longitude,
+            });
         });
     });
 
