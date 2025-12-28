@@ -28,9 +28,11 @@ const ActiveOrders = () => {
   const fetchActiveOrders = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:8000/api/v1/order/getActiveOrders",
+        // "http://localhost:8000/api/v1/order/getActiveOrders",
+        "https://quick-oh.onrender.com/api/v1/order/getActiveOrders",
         { withCredentials: true }
       );
+
       setOrders(res.data.data || []);
     } catch (error) {
       console.error("Failed to fetch active orders:", error);
@@ -61,13 +63,14 @@ const ActiveOrders = () => {
 
     try {
       await axios.put(
-        `http://localhost:8000/api/v1/order/acceptListedOrder/${orderId}`,
+        // `http://localhost:8000/api/v1/order/acceptListedOrder/${orderId}`,
+        `https://quick-oh.onrender.com/api/v1/order/acceptListedOrder/${orderId}`,
         {},
         { withCredentials: true }
       );
       toast.success("✅ Order accepted!");
       fetchActiveOrders();
-      navigate(`/delivery-details/${orderId}`);
+      navigate(`/deliveryPartner-delivery-details/${orderId}`);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to accept order.");
     }

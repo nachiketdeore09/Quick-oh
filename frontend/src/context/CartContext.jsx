@@ -15,7 +15,7 @@ export const CartProvider = ({ children }) => {
     }
     try {
       await axios.post(
-        "http://localhost:8000/api/v1/cart/reduceOneItem",
+        "https://quick-oh.onrender.com/api/v1/cart/reduceOneItem",
         {
           productId: product._id,
         },
@@ -48,7 +48,8 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (product) => {
     try {
       await axios.post(
-        "http://localhost:8000/api/v1/cart/addProductToCart",
+        // "http://localhost:8000/api/v1/cart/addProductToCart",
+        "https://quick-oh.onrender.com/api/v1/cart/addProductToCart",
         {
           productId: product._id,
           quantity: 1,
@@ -85,7 +86,8 @@ export const CartProvider = ({ children }) => {
     if (role === "deliveryPartner") return;
     try {
       const res = await axios.get(
-        "http://localhost:8000/api/v1/cart/getCartInfo",
+        // "http://localhost:8000/api/v1/cart/getCartInfo",
+        "https://quick-oh.onrender.com/api/v1/cart/getCartInfo",
         {
           withCredentials: true,
         }
@@ -121,7 +123,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     try {
       await axios.post(
-        `http://localhost:8000/api/v1/cart/removeAnItemFromCart`,
+        `https://quick-oh.onrender.com/api/v1/cart/removeAnItemFromCart`,
         {
           productId: productId,
         },
@@ -142,7 +144,8 @@ export const CartProvider = ({ children }) => {
     if (!cartItems) return;
     try {
       const res = await axios.delete(
-        `http://localhost:8000/api/v1/cart/clearCart`,
+        // `https://localhost:8000/api/v1/cart/clearCart`,
+        `https://quick-oh.onrender.com/api/v1/cart/clearCart`,
         {
           withCredentials: true,
         }

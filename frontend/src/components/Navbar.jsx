@@ -45,6 +45,7 @@ function Navbar() {
   const fetchUserOrders = async () => {
     try {
       const res = await axios.get(
+        // "http://localhost:8000/api/v1/order/getUserOrderHistory",
         "https://quick-oh.onrender.com/api/v1/order/getUserOrderHistory",
         {
           withCredentials: true,
@@ -91,7 +92,8 @@ function Navbar() {
   const confirmLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:8000/api/v1/users/logout",
+        "https://quick-oh.onrender.com/api/v1/users/logout",
+        // "http://localhost:8000/api/v1/users/logout",
         {},
         { withCredentials: true }
       );
@@ -303,7 +305,9 @@ function Navbar() {
                     sx={{ mt: 1, textTransform: "none" }}
                     onClick={() => {
                       handleBellClose();
-                      navigate(`/delivery-details/${currentOrder._id}`);
+                      navigate(
+                        `/customer-delivery-details/${currentOrder._id}`
+                      );
                     }}
                   >
                     View Details

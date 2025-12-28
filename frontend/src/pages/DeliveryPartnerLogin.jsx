@@ -34,12 +34,14 @@ function DeliveryPartnerLogin() {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/v1/users/login",
+        // "http://localhost:8000/api/v1/users/login",
+        "https://quick-oh.onrender.com/api/v1/users/login",
         formData,
         { withCredentials: true }
       );
 
       const user = res.data.data.user;
+      console.log(res.data.data);
 
       if (user.role === "deliveryPartner") {
         updateRole("deliveryPartner");

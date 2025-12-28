@@ -9,7 +9,8 @@ const PaymentModal = ({ amount, orderId, onClose, onSuccess, onFailure }) => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/v1/payment/create-order",
+        // "http://localhost:8000/api/v1/payment/create-order",
+        "https://quick-oh.onrender.com/api/v1/payment/create-order",
         { amount }
       );
       const { orderId: razorOrderId, key, amount: amt, currency } = res.data;
@@ -23,9 +24,12 @@ const PaymentModal = ({ amount, orderId, onClose, onSuccess, onFailure }) => {
         order_id: razorOrderId,
         handler: async function (response) {
           alert("✅ Payment Successful!");
-          await axios.post("http://localhost:8000/api/v1/payment/mark-paid", {
-            orderId,
-          });
+          await axios.post(
+            "https://quick-oh.onrender.com/api/v1/payment/mark-paid",
+            {
+              orderId,
+            }
+          );
           onSuccess();
         },
         prefill: {

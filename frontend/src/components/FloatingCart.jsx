@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import LocationPickerModal from "./Modals/LocationPickerModal";
+import OSMLocationPickerModal from "./Modals/OSMLocationPickerModal";
 import PaymentModal from "./Modals/PaymentModal";
 import {
   Box,
@@ -44,7 +44,8 @@ const FloatingCart = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/v1/order/createOrder",
+        // "http://localhost:8000/api/v1/order/createOrder",
+        "https://quick-oh.onrender.com/api/v1/order/createOrder",
         {
           address: shippingAddress.address,
           latitude: shippingAddress.latitude,
@@ -52,13 +53,14 @@ const FloatingCart = () => {
         },
         { withCredentials: true }
       );
-      alert("Order placed successfully!");
+
       setShowCart(false);
       setSelectedOrder({
         amount: Math.round(totalPrice),
         orderId: res.data.data._id,
       });
       setShowPaymentModal(true);
+      alert("Order placed successfully!");
     } catch (error) {
       console.error("Order placement failed:", error);
       alert("Failed to place order");
@@ -224,7 +226,7 @@ const FloatingCart = () => {
           </Button>
 
           {showLocationModal && (
-            <LocationPickerModal
+            <OSMLocationPickerModal
               onClose={() => setShowLocationModal(false)}
               onSelect={({ address, latitude, longitude }) => {
                 setShippingAddress({ address, latitude, longitude });
@@ -284,7 +286,7 @@ const FloatingCart = () => {
           }}
           onSuccess={() => {
             setShowPaymentModal(false);
-            navigate(`/delivery-details/${selectedOrder.orderId}`);
+            navigate(`/customer-delivery-details/${selectedOrder.orderId}`);
           }}
           onFailure={() => {
             setShowPaymentModal(false);

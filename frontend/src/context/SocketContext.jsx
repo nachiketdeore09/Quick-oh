@@ -9,7 +9,7 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:8000"); // Your backend's URL
+    const newSocket = io("https://quick-oh.onrender.com"); // Your backend's URL
     setSocket(newSocket);
 
     return () => newSocket.disconnect();

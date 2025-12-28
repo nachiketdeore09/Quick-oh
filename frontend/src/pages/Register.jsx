@@ -64,7 +64,7 @@ const Register = () => {
       });
 
       const response = await axios.post(
-        "http://localhost:8000/api/v1/users/register",
+        "https://quick-oh.onrender.com/api/v1/users/register",
         data,
         {
           withCredentials: true,

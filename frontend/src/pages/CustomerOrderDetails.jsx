@@ -25,9 +25,12 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import io from "socket.io-client";
-import LiveLocationTracker from "../components/LiveLocationTracker";
 import ThankYouPopup from "../components/ThankyouPopup.jsx";
+import ChatIcon from "@mui/icons-material/Chat";
+import ChatWindow from "../components/chatWindow.jsx";
+import LiveRouteMap from "../components/LiveRouteMap.jsx";
+import { useChat } from "../context/ChatContext";
+import socket from "../socket";
 
 // Fix Leaflet marker issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -38,25 +41,32 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-const DeliveryDetails = () => {
+const CustomerOrderDetails = () => {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [partnerPosition, setPartnerPosition] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [openChat, setOpenChat] = useState(false);
 
   const [confirming, setConfirming] = useState(false);
   const [reloading, setReloading] = useState(false);
-  const socketRef = useRef(null);
   const navigate = useNavigate();
+
+  // user joins the chat room
+  const { joinChat, unreadByOrder } = useChat();
+  useEffect(() => {
+    joinChat(orderId);
+  }, [orderId]);
 
   // Fetch current user
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8000/api/v1/users/current-user",
+          // "http://localhost:8000/api/v1/users/current-user",
+          "https://quick-oh.onrender.com/api/v1/users/current-user",
           { withCredentials: true }
         );
         setCurrentUser(res.data.data);
@@ -72,13 +82,15 @@ const DeliveryDetails = () => {
     try {
       if (!reloading) setLoading(true);
       const res = await axios.get(
-        `http://localhost:8000/api/v1/order/getSingleOrderById/${orderId}`,
+        // `http://localhost:8000/api/v1/order/getSingleOrderById/${orderId}`,
+        `https://quick-oh.onrender.com/api/v1/order/getSingleOrderById/${orderId}`,
         { withCredentials: true }
       );
       setOrder(res.data.data);
 
       const currRes = await axios.get(
-        "http://localhost:8000/api/v1/users/current-user",
+        // "http://localhost:8000/api/v1/users/current-user",
+        "https://quick-oh.onrender.com/api/v1/users/current-user",
         { withCredentials: true }
       );
       if (
@@ -109,21 +121,14 @@ const DeliveryDetails = () => {
   useEffect(() => {
     if (!order || !currentUser) return;
 
-    const assignedTo = order.assignedTo;
-    socketRef.current = io("http://localhost:8000", {
-      withCredentials: true,
+    socket.emit("joinOrderRoom", { orderId });
+
+    socket.on("partner-location-update", ({ latitude, longitude }) => {
+      console.log("📡 Partner location received:", latitude, longitude);
+      setPartnerPosition([latitude, longitude]);
     });
 
-    socketRef.current.emit("joinRoom", { userId: currentUser._id });
-
-    socketRef.current.on(
-      `location-update-${assignedTo}`,
-      ({ latitude, longitude }) => {
-        setPartnerPosition([latitude, longitude]);
-      }
-    );
-
-    socketRef.current.on("order-updated", (updatedOrder) => {
+    socket.on("order-updated", (updatedOrder) => {
       if (updatedOrder._id === order._id) {
         setOrder(updatedOrder);
         if (updatedOrder.status === "Delivered") {
@@ -137,15 +142,16 @@ const DeliveryDetails = () => {
     });
 
     return () => {
-      socketRef.current?.disconnect();
+      socket.disconnect();
     };
-  }, [order, currentUser, navigate]);
+  }, [orderId, order, currentUser, navigate]);
 
   const handleConfirmDelivery = async () => {
     try {
       setConfirming(true);
       const res = await axios.post(
-        `http://localhost:8000/api/v1/order/updateOrderStatus/${orderId}`,
+        // `http://localhost:8000/api/v1/order/updateOrderStatus/${orderId}`,
+        `https://quick-oh.onrender.com/api/v1/order/updateOrderStatus/${orderId}`,
         { status: "Delivered" },
         { withCredentials: true }
       );
@@ -208,9 +214,6 @@ const DeliveryDetails = () => {
         gap: 3,
       }}
     >
-      <LiveLocationTracker userId={order.assignedTo} />
-
-      {/* Header with Reload button */}
       <Box
         sx={{
           display: "flex",
@@ -249,34 +252,19 @@ const DeliveryDetails = () => {
           width: "100%",
         }}
       >
-        <MapContainer
-          center={customerPosition}
-          zoom={14}
-          style={{ height: "400px", width: "100%" }}
+        <Box
+          sx={{
+            borderRadius: 2,
+            overflow: "hidden",
+            boxShadow: 3,
+            width: "100%",
+          }}
         >
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          <LiveRouteMap
+            customerPosition={customerPosition}
+            partnerPosition={partnerPosition}
           />
-          <Marker position={customerPosition}>
-            <Popup>
-              Customer Location
-              <br />
-              {address}
-            </Popup>
-          </Marker>
-          {partnerPosition && (
-            <>
-              <Marker position={partnerPosition}>
-                <Popup>Delivery Partner</Popup>
-              </Marker>
-              <Polyline
-                positions={[partnerPosition, customerPosition]}
-                color="blue"
-              />
-            </>
-          )}
-        </MapContainer>
+        </Box>
       </Box>
 
       <Card sx={{ width: "100%", borderRadius: 3, boxShadow: 4, p: 2 }}>
@@ -368,8 +356,54 @@ const DeliveryDetails = () => {
         open={showThankYou}
         onClose={() => setShowThankYou(false)}
       />
+
+      {/* Floating Chat Button */}
+      <IconButton
+        onClick={() => setOpenChat(true)}
+        sx={{
+          position: "fixed",
+          bottom: 25,
+          left: 25,
+          bgcolor: "primary.main",
+          color: "white",
+          width: 56,
+          height: 56,
+          boxShadow: 4,
+          "&:hover": { bgcolor: "primary.dark" },
+          zIndex: 1500,
+        }}
+      >
+        <ChatIcon />
+      </IconButton>
+      <ChatWindow
+        open={openChat}
+        onClose={() => setOpenChat(false)}
+        orderId={order._id}
+        currentUser={currentUser}
+      />
+      {/*  For the unread message */}
+      {unreadByOrder[orderId] > 0 && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: -4,
+            right: -4,
+            bgcolor: "red",
+            color: "white",
+            borderRadius: "50%",
+            width: 20,
+            height: 20,
+            fontSize: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {unreadByOrder[orderId]}
+        </Box>
+      )}
     </Box>
   );
 };
 
-export default DeliveryDetails;
+export default CustomerOrderDetails;

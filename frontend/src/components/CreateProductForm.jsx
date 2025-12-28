@@ -36,7 +36,7 @@ function CreateProductForm({ onProductCreated }) {
 
     try {
       await axios.post(
-        "http://localhost:8000/api/v1/products/createProduct",
+        "https://quick-oh.onrender.com/api/v1/products/createProduct",
         formData,
         {
           withCredentials: true,

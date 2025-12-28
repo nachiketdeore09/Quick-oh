@@ -21,7 +21,8 @@ const Orders = () => {
     const fetchOrder = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:8000/api/v1/order/getSingleOrderById/${newOrder._id}`,
+          // `http://localhost:8000/api/v1/order/getSingleOrderById/${newOrder._id}`,
+          `https://quick-oh.onrender.com/api/v1/order/getSingleOrderById/${newOrder._id}`,
           { withCredentials: true }
         );
         setOrder(res.data.data);
@@ -45,7 +46,8 @@ const Orders = () => {
 
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/v1/order/cancelOrder/${order._id}`,
+        // `http://localhost:8000/api/v1/order/cancelOrder/${order._id}`,
+        `https://quick-oh.onrender.com/api/v1/order/cancelOrder/${order._id}`,
         {},
         { withCredentials: true }
       );

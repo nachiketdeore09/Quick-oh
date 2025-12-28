@@ -47,7 +47,7 @@ function VendorDashboard() {
   const fetchCurrentUser = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:8000/api/v1/users/current-user",
+        "https://quick-oh.onrender.com/api/v1/users/current-user",
         {
           withCredentials: true,
         }
@@ -76,7 +76,7 @@ function VendorDashboard() {
   const handleUpdate = async () => {
     try {
       await axios.patch(
-        "http://localhost:8000/api/v1/users/update-account",
+        "https://quick-oh.onrender.com/api/v1/users/update-account",
         {
           newName: formData.name,
           newEmail: formData.email,
@@ -99,7 +99,7 @@ function VendorDashboard() {
 
     try {
       const res = await axios.patch(
-        "http://localhost:8000/api/v1/users/profilePicture",
+        "https://quick-oh.onrender.com/api/v1/users/profilePicture",
         formData,
         {
           withCredentials: true,
@@ -122,7 +122,7 @@ function VendorDashboard() {
   const handleChangePassword = async () => {
     try {
       await axios.post(
-        "http://localhost:8000/api/v1/users/change-password",
+        "https://quick-oh.onrender.com/api/v1/users/change-password",
         passwordForm,
         {
           withCredentials: true,
@@ -142,7 +142,7 @@ function VendorDashboard() {
   const fetchProducts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:8000/api/v1/products/getAllProducts",
+        "https://quick-oh.onrender.com/api/v1/products/getAllProducts",
         {
           withCredentials: true,
         }

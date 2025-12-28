@@ -13,7 +13,7 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-const socket = io("http://localhost:8000", {
+const socket = io("https://quick-oh.onrender.com", {
   withCredentials: true,
 });
 
@@ -25,25 +25,30 @@ const RecenterMap = ({ center }) => {
   return null;
 };
 
-const LiveLocationTracker = ({ userId, customerLocation }) => {
+const LiveLocationTracker = ({ orderId, partnerId, onLocationUpdate }) => {
   const [deliveryPosition, setDeliveryPosition] = useState(null);
   const markerRef = useRef(null);
 
   useEffect(() => {
-    if (!userId) {
+    console.log(partnerId);
+    if (!partnerId) {
       alert("No user ID passed");
       return;
     }
 
-    socket.emit("joinRoom", { userId });
+    // socket.emit("joinRoom", { userId });
+    socket.emit("joinOrderRoom", { orderId });
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        setDeliveryPosition([latitude, longitude]);
+        console.log("🛵 Emitting location:", latitude, longitude);
+        // setDeliveryPosition([latitude, longitude]);
 
+        onLocationUpdate([latitude, longitude]);
+        socket.emit("partner-location-update", { latitude, longitude });
         socket.emit("updateLocation", {
-          userId,
+          orderId,
           latitude,
           longitude,
         });
@@ -59,9 +64,7 @@ const LiveLocationTracker = ({ userId, customerLocation }) => {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
-
-  const defaultCenter = deliveryPosition || customerLocation;
+  }, [orderId, onLocationUpdate]);
 
   return null;
 };

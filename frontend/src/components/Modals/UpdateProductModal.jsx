@@ -28,7 +28,7 @@ export default function EditProductModal({ product, onClose, onUpdate }) {
   const handleUpdate = async () => {
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/v1/products/updateProduct/${product._id}`,
+        `https://quick-oh.onrender.com/api/v1/products/updateProduct/${product._id}`,
         formData,
         { withCredentials: true }
       );
@@ -50,7 +50,7 @@ export default function EditProductModal({ product, onClose, onUpdate }) {
 
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/v1/products/updateProductImage/${product._id}`,
+        `https://quick-oh.onrender.com/api/v1/products/updateProductImage/${product._id}`,
         uploadData,
         {
           withCredentials: true,

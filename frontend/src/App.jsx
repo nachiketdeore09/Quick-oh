@@ -12,9 +12,10 @@ import VendorDashboard from "./pages/VendorDashboard.jsx";
 import Orders from "./pages/Order.jsx";
 import DeliveryPartnerLogin from "./pages/DeliveryPartnerLogin.jsx";
 import ActiveOrders from "./pages/ActiveOrders.jsx";
-import DeliveryDetails from "./pages/DeliveryDetails.jsx";
+import CustomerOrderDetails from "./pages/CustomerOrderDetails.jsx";
 import { ToastContainer } from "react-toastify";
 import Footer from "./components/Footer.jsx";
+import DeliveryPartnerOrderDetails from "./pages/DeliveryPartnerOrderDetails.jsx";
 
 import "./App.css";
 
@@ -44,10 +45,14 @@ function App() {
             <Route path="/delivery-login" element={<DeliveryPartnerLogin />} />
             <Route path="/active-orders" element={<ActiveOrders />} />
             <Route
-              path="/delivery-details/:orderId"
-              element={<DeliveryDetails />}
+              path="/customer-delivery-details/:orderId"
+              element={<CustomerOrderDetails />}
             />
             <Route path="/delivery-dashboard" element={<Profile />} />
+            <Route
+              path="/deliveryPartner-delivery-details/:orderId"
+              element={<DeliveryPartnerOrderDetails />}
+            />
             {/* Add more routes as needed */}
           </Routes>
         </main>

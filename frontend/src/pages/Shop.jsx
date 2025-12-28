@@ -23,7 +23,8 @@ const Shop = () => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8000/api/v1/products/getAllProducts",
+          // "http://localhost:8000/api/v1/products/getAllProducts",
+          "https://quick-oh.onrender.com/api/v1/products/getAllProducts",
           { withCredentials: true }
         );
         setProducts(res.data.data.products);
@@ -38,7 +39,8 @@ const Shop = () => {
     try {
       setSearching(true);
       const res = await axios.get(
-        `http://localhost:8000/api/v1/products/searchProducts?keyword=${searchTerm}&page=1&limit=20`,
+        // `https://localhost:8000/api/v1/products/searchProducts?keyword=${searchTerm}&page=1&limit=20`,
+        `https://quick-oh.onrender.com/api/v1/products/searchProducts?keyword=${searchTerm}&page=1&limit=20`,
         { withCredentials: true }
       );
       setProducts(res.data.data);

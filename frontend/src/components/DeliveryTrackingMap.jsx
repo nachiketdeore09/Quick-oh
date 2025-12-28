@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import io from "socket.io-client";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 
-const socket = io("http://localhost:8000");
+const socket = io("https://quick-oh.onrender.com");
 
 const DeliveryTrackingMap = ({ destination }) => {
   const [partnerLocation, setPartnerLocation] = useState(null);
