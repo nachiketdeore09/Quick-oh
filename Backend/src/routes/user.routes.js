@@ -5,9 +5,15 @@ import {
     updateAccountDetails, updateUserProfilePicture
 } from "../controllers/user.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { rateLimiter } from "../utils/rateLimiter.redis.js";
 const router = Router();
 
 router.route("/register").post(
+    rateLimiter({
+        keyPrefix: "login",
+        limit: 5,
+        windowSeconds: 60
+    }),
     upload.single("profilePicture"),
     registerUser
 )

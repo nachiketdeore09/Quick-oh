@@ -7,6 +7,7 @@ import {
     createProduct, updateProduct, updateProductPicture, toggleStock, getAllProducts,
     getSingleProduct, searchProduct
 } from "../controllers/product.controllers.js";
+import { rateLimiter } from "../utils/rateLimiter.redis.js";
 const router = Router();
 
 //secured routes
@@ -54,6 +55,11 @@ router.route("/getSingleProduct/:id").get(
 
 router.route("/searchProducts").get(
     verifyJWT,
+    rateLimiter({
+        keyPrefix: "search",
+        limit: 20,
+        windowSeconds: 60
+    }),
     searchProduct
 )
 export default router;

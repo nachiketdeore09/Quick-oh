@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { uploadOnCloudinary } from "../cloudinary.js";
 import { Product } from "../models/product.models.js";
 import { Category } from "../models/category.models.js";
+import redis from "../db/redis.js";
 import mongoose from "mongoose";
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -67,6 +68,9 @@ const createProduct = asyncHandler(async (req, res) => {
         throw new apiError(401, "Error while creating product");
     }
 
+    await redis.del("categories:all");
+    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+
     return res
         .status(200)
         .json(
@@ -117,6 +121,10 @@ const updateProduct = asyncHandler(async (req, res) => {
         throw new apiError(404, "No such product found");
     }
 
+    // clear the Redis cache
+    await redis.del(`product:${productId}`);
+    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+
     // Return the updated product
     return res
         .status(200)
@@ -157,6 +165,10 @@ const updateProductPicture = asyncHandler(async (req, res) => {
 
     await product.save({ validateBeforeSave: false });
 
+    // clear the Redis cache
+    await redis.del(`product:${productId}`);
+    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+
     return res
         .status(200)
         .json(
@@ -188,6 +200,10 @@ const toggleStock = asyncHandler(async (req, res) => {
     product.stock = stockStatus;
     await product.save({ validateBeforeSave: false });
 
+    // clear the Redis cache
+    await redis.del(`product:${productId}`);
+    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+
     return res
         .status(200)
         .json(
@@ -208,6 +224,17 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
     if (isNaN(pageNumber) || isNaN(limitNumber) || pageNumber <= 0 || limitNumber <= 0) {
         throw new apiError(400, "Invalid page or limit value");
+    }
+
+    // define redis key
+    const CACHE_KEY = `products:page:${pageNumber}:limit:${limitNumber}`;
+
+    //Check Redis first
+    const cachedData = await redis.get(CACHE_KEY);
+    if (cachedData) {
+        return res.status(200).json(
+            new apiResponse(200, JSON.parse(cachedData), "Products fetched from cache")
+        );
     }
 
     // Calculate the number of documents to skip
@@ -258,6 +285,22 @@ const getAllProducts = asyncHandler(async (req, res) => {
     // Calculate total pages
     const totalPages = Math.ceil(totalProducts / limitNumber);
 
+
+    const responsePayload = {
+        products,
+        currentPage: pageNumber,
+        totalPages,
+        totalProducts,
+    };
+
+    //Cache to Redis
+    await redis.set(
+        CACHE_KEY,
+        JSON.stringify(responsePayload),
+        "EX",
+        300
+    );
+
     // Return the paginated response
     return res.status(200).json(
         new apiResponse(
@@ -275,6 +318,17 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
 const getSingleProduct = asyncHandler(async (req, res) => {
     const productId = req.params.id;
+    //Redis key
+    const CACHE_KEY = `product:${id}`;
+
+    //Check for Redis
+    const cached = await redis.get(CACHE_KEY);
+    if (cached) {
+        return res.status(200).json(
+            new apiResponse(200, JSON.parse(cached), "Product fetched from cache")
+        );
+    }
+
     if (!productId) {
         throw new apiError(401, "receieved no product Id");
     }
@@ -283,6 +337,10 @@ const getSingleProduct = asyncHandler(async (req, res) => {
         throw new apiError(404, "No such Product exist");
     }
     product.searches += 1;
+
+    //Cache Loaded Products.
+    await redis.set(CACHE_KEY, JSON.stringify(product), 300, "EX");
+
     await product.save({ validateBeforeSave: false });
     return res
         .status(200)

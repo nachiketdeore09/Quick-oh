@@ -1,15 +1,21 @@
 import { Router } from "express";
 import {
     createOrder, getUserOrderHistory, getSingleOrderById, updateOrderStatus,
-    cancelOrder, acceptListedOrder, getActiveOrders
+    cancelOrder, acceptListedOrder, getActiveOrders, getLiveOrderStatus, fetchLivePartnerLocation
 } from "../controllers/order.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkAdmin } from "../middlewares/checkAdmin.middleware.js";
-
+import { rateLimiter } from "../utils/rateLimiter.redis.js";
 const router = Router();
 
 router.route("/createOrder").post(
     verifyJWT,
+    rateLimiter({
+        keyPrefix: "order",
+        limit: 3,
+        windowSeconds: 300,
+        identifier: "user"
+    }),
     createOrder
 )
 
@@ -42,6 +48,16 @@ router.route("/acceptListedOrder/:id").put(
 router.route("/getActiveOrders").get(
     verifyJWT,
     getActiveOrders
+)
+
+router.route("/getLiveOrderStatus/:id").get(
+    verifyJWT,
+    getLiveOrderStatus
+)
+
+router.route("/livePartnerLocation/:id").get(
+    verifyJWT,
+    fetchLivePartnerLocation
 )
 
 

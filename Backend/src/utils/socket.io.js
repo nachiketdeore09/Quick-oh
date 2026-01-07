@@ -1,4 +1,6 @@
 import { Server } from "socket.io";
+import { setDeliveryLocation } from "./deliveryLocation.redis.js";
+import { socketRateLimiter } from "./rateLimiter.redis.js";
 
 let io;
 
@@ -31,7 +33,15 @@ export const initSocket = (server) => {
             socket.join(orderId);
         });
 
-        socket.on("chat-message", (message) => {
+        socket.on("chat-message", async (message) => {
+            const allowed = await socketRateLimiter({
+                socket,
+                action: "chat",
+                limit: 20,
+                windowSeconds: 60
+            });
+
+            if (!allowed) return;
             io.to(message.orderId).emit("chat-message", message);
         });
         ///////// CHAT SOCKET ///////////
@@ -41,7 +51,20 @@ export const initSocket = (server) => {
             console.log("Client disconnected:", socket.id);
         });
 
-        socket.on("updateLocation", ({ orderId, latitude, longitude }) => {
+        socket.on("updateLocation", async ({ orderId, latitude, longitude }) => {
+            const allowed = await socketRateLimiter({
+                socket,
+                action: "updateLocation",
+                limit: 30,           // 30 updates
+                windowSeconds: 60    // per minute
+            });
+            if (!allowed) return;
+
+
+            if (!orderId || latitude == null || longitude == null) return;
+            // Save the latest location to redis.
+            await setDeliveryLocation(orderId, latitude, longitude);
+
             // Broadcast to anyone tracking this delivery partner
             // io.emit(`location-update-${userId}`, { latitude, longitude });
             console.log(`joined room ${orderId}`);

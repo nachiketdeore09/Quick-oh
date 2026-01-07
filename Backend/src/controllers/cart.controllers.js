@@ -4,6 +4,7 @@ import { Product } from "../models/product.models.js";
 import { User } from "../models/user.models.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { apiError } from "../utils/apiError.js";
+import redis from "../db/redis.js";
 
 const addProductToCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;
@@ -15,38 +16,48 @@ const addProductToCart = asyncHandler(async (req, res) => {
         throw new apiError(404, "Product not found");
     }
 
-    let cart = await Cart.findOne(
-        { user: userId }
-    );
+    /// REDIS CACHING for Cart Updates. ////
+    const cartKey = `cart:${userId}`;
 
-    if (!cart) {
-        cart = await Cart.create(
-            { user: userId, items: [] }
-        );
-    }
+    // Increment quantity atomically
+    await redis.hincrby(cartKey, productId, quantity);
 
-    const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+    // Optional: auto-expire cart after 24h inactivity
+    await redis.expire(cartKey, 86400);
 
-    if (itemIndex > -1) {
+    // OLD Mongo DB Logic
+    // let cart = await Cart.findOne(
+    //     { user: userId }
+    // );
 
-        if (quantity === 1) {
-            cart.items[itemIndex].quantity += parseInt(quantity || 1, 10);
-        } else if (quantity === 0) {
+    // if (!cart) {
+    //     cart = await Cart.create(
+    //         { user: userId, items: [] }
+    //     );
+    // }
 
-            cart.items[itemIndex].quantity -= 1;
-        }
-        // cart.items[itemIndex].quantity += parseInt(quantity || 1, 10);
-    } else {
-        cart.items.push({ product: productId, quantity: quantity || 1 });
-    }
+    // const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
 
-    await cart.save();
+    // if (itemIndex > -1) {
+
+    //     if (quantity === 1) {
+    //         cart.items[itemIndex].quantity += parseInt(quantity || 1, 10);
+    //     } else if (quantity === 0) {
+
+    //         cart.items[itemIndex].quantity -= 1;
+    //     }
+    //     // cart.items[itemIndex].quantity += parseInt(quantity || 1, 10);
+    // } else {
+    //     cart.items.push({ product: productId, quantity: quantity || 1 });
+    // }
+
+    // await cart.save();
     return res
         .status(200)
         .json(
             new apiResponse(
                 200,
-                cart,
+                null,
                 "Item added to cart"
             ));
 });
@@ -55,38 +66,47 @@ const decreaseCartItemQuantity = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const { productId } = req.body;
 
-    const cart = await Cart.findOne({ user: userId });
-
-    if (!cart) {
-        throw new apiError(404, "Cart not found");
-    }
-
-    const itemIndex = cart.items.findIndex(
-        item => item.product.toString() === productId
-    );
-
-    if (itemIndex === -1) {
+    // REDIS CACHE FOR CART
+    const cartKey = `cart:${userId}`;
+    const currentQty = await redis.hget(cartKey, productId);
+    if (!currentQty) {
         throw new apiError(404, "Product not found in cart");
     }
 
-    if (cart.items[itemIndex].quantity > 1) {
-        cart.items[itemIndex].quantity -= 1;
+    if (parseInt(currentQty) > 1) {
+        await redis.hincrby(cartKey, productId, -1);
     } else {
-        // Remove item if quantity is 1
-        cart.items.splice(itemIndex, 1);
+        await redis.hdel(cartKey, productId);
     }
 
-    await cart.save();
 
-    return res
-        .status(200)
-        .json(
-            new apiResponse(
-                200,
-                cart,
-                "Item quantity updated in cart"
-            )
-        );
+    // Old Mongo DB Logic
+    // const cart = await Cart.findOne({ user: userId });
+
+    // if (!cart) {
+    //     throw new apiError(404, "Cart not found");
+    // }
+
+    // const itemIndex = cart.items.findIndex(
+    //     item => item.product.toString() === productId
+    // );
+
+    // if (itemIndex === -1) {
+    //     throw new apiError(404, "Product not found in cart");
+    // }
+
+    // if (cart.items[itemIndex].quantity > 1) {
+    //     cart.items[itemIndex].quantity -= 1;
+    // } else {
+    //     // Remove item if quantity is 1
+    //     cart.items.splice(itemIndex, 1);
+    // }
+
+    // await cart.save();
+
+    return res.status(200).json(
+        new apiResponse(200, null, "Item quantity updated in cart")
+    );
 });
 
 
@@ -103,19 +123,52 @@ const getCartInfo = asyncHandler(async (req, res) => {
                 )
             )
     }
-    const cart = await Cart.findOne({ user: userId }).populate("items.product");
-    if (!cart) {
-        throw new apiError(404, "Cart not found");
+    //REDIS CACHE
+    const cartKey = `cart:${userId}`;
+    const cartItems = await redis.hgetall(cartKey);
+    await redis.expire(cartKey, 86400); //refreshes the TTL for the cart every time this is called
+
+    if (!cartItems || Object.keys(cartItems).length === 0) {
+        return res.status(200).json(
+            new apiResponse(200, { cart: [], total: 0 }, "Cart is empty")
+        );
     }
 
-    let total = 0;
-    cart.items.forEach(item => {
-        const price = item.product.discount > 0
-            ? item.product.price * (1 - item.product.discount / 100)
-            : item.product.price;
+    const productIds = Object.keys(cartItems);
+    const products = await Product.find({ _id: { $in: productIds } })
+        .select("productName price discount productImage")
+        .lean();
 
-        total += price * item.quantity;
+    let total = 0;
+    const cart = products.map(product => {
+        const quantity = parseInt(cartItems[product._id]);
+        const price = product.discount > 0
+            ? product.price * (1 - product.discount / 100)
+            : product.price;
+
+        total += price * quantity;
+
+        return {
+            product,
+            quantity,
+            subtotal: price * quantity
+        };
     });
+
+    // OLD MONGO DB LOGIC
+    // const cart = await Cart.findOne({ user: userId }).populate("items.product");
+    // if (!cart) {
+    //     throw new apiError(404, "Cart not found");
+    // }
+
+    // let total = 0;
+    // cart.items.forEach(item => {
+    //     const price = item.product.discount > 0
+    //         ? item.product.price * (1 - item.product.discount / 100)
+    //         : item.product.price;
+
+    //     total += price * item.quantity;
+    // });
 
     return res
         .status(200)
@@ -128,29 +181,17 @@ const getCartInfo = asyncHandler(async (req, res) => {
 });
 
 const removeAnItemFromCart = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
     const productId = req.body.productId;
 
-    const cart = await Cart.findOne({ user: userId });
-    if (!cart) throw new apiError(404, "Cart not found");
+    const cartKey = `cart:${userId}`;
+    await redis.hdel(cartKey, productId);
 
-    cart.items = cart.items.filter(item => item.product.toString() !== productId);
-    await cart.save();
+    // const cart = await Cart.findOne({ user: userId });
+    // if (!cart) throw new apiError(404, "Cart not found");
 
-    return res
-        .status(200)
-        .json(
-            new apiResponse(
-                200,
-                cart,
-                "Item removed"
-            ));
-});
-
-const clearCart = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
-
-    await Cart.findOneAndUpdate({ user: userId }, { items: [] });
+    // cart.items = cart.items.filter(item => item.product.toString() !== productId);
+    // await cart.save();
 
     return res
         .status(200)
@@ -158,8 +199,18 @@ const clearCart = asyncHandler(async (req, res) => {
             new apiResponse(
                 200,
                 null,
-                "Cart cleared"
+                "Item removed"
             ));
+});
+
+const clearCart = asyncHandler(async (req, res) => {
+    const userId = req.user._id.toString();
+
+    await redis.del(`cart:${userId}`);
+
+    return res.status(200).json(
+        new apiResponse(200, null, "Cart cleared")
+    );
 });
 
 export {

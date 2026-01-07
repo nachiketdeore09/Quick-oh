@@ -5,9 +5,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateRefreshAndAccessTokens } from "../controllers/user.controllers.js"; // import helper
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
-    console.log("AccessToken Cookie:", req.cookies?.accessToken);
-    console.log("RefreshToken Cookie:", req.cookies?.refreshToken);
-    console.log("Authorization Header:", req.header("Authorization"));
+    // console.log("AccessToken Cookie:", req.cookies?.accessToken);
+    // console.log("RefreshToken Cookie:", req.cookies?.refreshToken);
+    // console.log("Authorization Header:", req.header("Authorization"));
+
     try {
         const token =
             req.cookies?.accessToken ||

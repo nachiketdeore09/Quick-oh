@@ -4,11 +4,18 @@ import {
 } from "../controllers/cart.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkAdmin } from "../middlewares/checkAdmin.middleware.js";
+import { rateLimiter } from "../utils/rateLimiter.redis.js";
 
 const router = Router();
 
 router.route("/addProductToCart").post(
     verifyJWT,
+    rateLimiter({
+        keyPrefix: "addToCart",
+        limit: 30,
+        windowSeconds: 60,
+        identifier: "user"
+    }),
     addProductToCart
 )
 
