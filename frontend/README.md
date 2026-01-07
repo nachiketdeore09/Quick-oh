@@ -9,3 +9,10 @@
 7. find a way to share real time location from delivery partner to customer.
 8. the chat window only works when both user have opened the window => improve it so that we ge a notification funciton in the same. => done.
 9. fix the sockets instance into a single file => done.
+   Redis:
+   1️⃣ Product / Category Fetching (Caching Workflow)
+   2️⃣ Cart Workflow (Fast Checkout)
+   3️⃣ Order Status Workflow (Real-Time Tracking)
+   4️⃣ Real-Time Delivery Location (MOST IMPORTANT)
+   5️⃣ Redis + Socket.IO Scaling (Pub/Sub)
+   6️⃣ Rate Limiting & Abuse Protection

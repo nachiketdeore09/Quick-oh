@@ -15,6 +15,7 @@ export const CartProvider = ({ children }) => {
     }
     try {
       await axios.post(
+        // "http://localhost:8000/api/v1/cart/reduceOneItem",
         "https://quick-oh.onrender.com/api/v1/cart/reduceOneItem",
         {
           productId: product._id,
@@ -96,14 +97,14 @@ export const CartProvider = ({ children }) => {
       // console.log("res from fetchCart: ", res);
       const cart = res?.data?.data?.cart;
 
-      if (!cart || !Array.isArray(cart.items)) {
+      if (!cart || !Array.isArray(cart)) {
         // No cart exists yet for this user
         setCartItems([]);
         console.log("No cart found yet for this user. Initialized empty cart.");
         return;
       }
 
-      const cartData = res.data.data.cart.items.map((item) => ({
+      const cartData = cart.map((item) => ({
         ...item.product,
         quantity: item.quantity,
       }));
@@ -123,6 +124,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     try {
       await axios.post(
+        // `http://localhost:8000/api/v1/cart/removeAnItemFromCart`,
         `https://quick-oh.onrender.com/api/v1/cart/removeAnItemFromCart`,
         {
           productId: productId,
@@ -159,8 +161,10 @@ export const CartProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchCart();
-  }, []);
+    if (isAuthenticated && role !== "deliveryPartner") {
+      fetchCart();
+    }
+  }, [isAuthenticated, role]);
 
   return (
     <CartContext.Provider

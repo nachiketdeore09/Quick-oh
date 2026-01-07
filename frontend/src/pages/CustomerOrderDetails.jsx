@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -117,6 +117,27 @@ const CustomerOrderDetails = () => {
     fetchOrderDetails();
   }, [fetchOrderDetails]);
 
+  //fetching last known location from redis
+  useEffect(() => {
+    const fetchLastLocation = async () => {
+      try {
+        const res = await axios.get(
+          `http://quick-oh.onrender.com/api/v1/order/livePartnerLocation/${orderId}`,
+          { withCredentials: true }
+        );
+        console.log(res);
+        if (res.data?.data?.latitude && res.data?.data?.longitude) {
+          setPartnerPosition([res.data.data.latitude, res.data.data.longitude]);
+        }
+      } catch (err) {
+        console.log(err);
+        console.log("No last known delivery location yet");
+      }
+    };
+
+    fetchLastLocation();
+  }, [orderId]);
+
   // Socket tracking
   useEffect(() => {
     if (!order || !currentUser) return;
@@ -142,7 +163,8 @@ const CustomerOrderDetails = () => {
     });
 
     return () => {
-      socket.disconnect();
+      socket.off("partner-location-update");
+      socket.off("order-updated");
     };
   }, [orderId, order, currentUser, navigate]);
 
@@ -157,7 +179,7 @@ const CustomerOrderDetails = () => {
       );
       alert("✅ Delivery confirmed successfully!");
       setOrder((prev) => ({ ...prev, status: "Delivered" }));
-      socketRef.current.emit("order-delivered", res.data.data);
+      socket.emit("order-delivered", res.data.data);
       if (currentUser && order.assignedTo === currentUser._id) {
         navigate("/active-orders");
       }
