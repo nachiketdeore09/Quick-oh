@@ -7,8 +7,6 @@ import redis from "../db/redis.js";
 
 const createCategory = asyncHandler(async (req, res) => {
     const { name, description } = req.body;
-    console.log(name)
-    console.log(description)
     if (name?.trim() === "") {
         throw new apiError(400, "Category name is required");
     }
@@ -35,9 +33,9 @@ const createCategory = asyncHandler(async (req, res) => {
         categoryImage: categoryImage.url,
     });
 
-    // Clear the Redis Cache
-    await redis.del("categories:all");
-    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+    // 🔥 CACHE INVALIDATION (VERSIONING)
+    await redis.incr("categories:version");
+    await redis.incr("products:version");
 
     return res
         .status(201)
@@ -50,27 +48,22 @@ const createCategory = asyncHandler(async (req, res) => {
 });
 
 const getAllCategories = asyncHandler(async (req, res) => {
-
-    // define redis key
-    const CACHE_KEY = "categories:all";
+    const version = (await redis.get("categories:version")) || 1;
+    const cacheKey = `categories:v${version}:all`;
 
     //Check for Redis
-    const cached = await redis.get(CACHE_KEY);
+    const cached = await redis.get(cacheKey);
     if (cached) {
         return res.status(200).json(
-            new apiResponse(200, JSON.parse(cached), "Categories fetched from cache")
+            new apiResponse(200, cached, "Categories fetched from cache")
         );
     }
 
     const categories = await Category.find().select("-__v");
 
-
-    await redis.set(
-        "categories:all",
-        JSON.stringify(categories),
-        "EX",
-        600
-    );
+    if (categories.length > 0) {
+        await redis.set(cacheKey, categories, { ex: 600 });
+    }
 
     return res
         .status(200)
@@ -90,9 +83,9 @@ const deleteCategory = asyncHandler(async (req, res) => {
         throw new apiError(404, "Category not found");
     }
 
-    // Clear redis Cache
-    await redis.del("categories:all");
-    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+    // 🔥 CACHE INVALIDATION (VERSIONING)
+    await redis.incr("categories:version");
+    await redis.incr("products:version");
 
     return res
         .status(200)

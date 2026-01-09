@@ -11,10 +11,6 @@ export const rateLimiter = ({
 }) => {
     return async (req, res, next) => {
         try {
-            if (!redis || redis.status !== "ready") {
-                return next();
-            }
-
             const id =
                 identifier === "user"
                     ? req.user?._id?.toString()
@@ -51,19 +47,20 @@ export const socketRateLimiter = async ({
     limit,
     windowSeconds
 }) => {
-    if (!redis || redis.status !== "ready") {
+    try {
+        const userId = socket.user?.id || socket.id;
+        const key = `rate:socket:${action}:${userId}`;
+
+        const count = await redis.incr(key);
+
+        if (count === 1) {
+            await redis.expire(key, windowSeconds);
+        }
+
+        return count <= limit;
+    } catch (err) {
+        console.error("Socket rate limit error:", err.message);
         return true;
     }
-
-    const userId = socket.user?.id || socket.id;
-    const key = `rate:socket:${action}:${userId}`;
-
-    const count = await redis.incr(key);
-
-    if (count === 1) {
-        await redis.expire(key, windowSeconds);
-    }
-
-    return count <= limit;
 };
 

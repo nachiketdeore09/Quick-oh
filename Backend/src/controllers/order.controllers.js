@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { apiError } from "../utils/apiError.js";
 import { Order } from "../models/order.models.js";
-import { Cart } from "../models/cart.models.js";
+
 import { User } from "../models/user.models.js";
 import { getIO } from "../utils/socket.io.js";
 import { Product } from "../models/product.models.js";
@@ -71,48 +71,6 @@ const createOrder = asyncHandler(async (req, res) => {
     //Clear the redis Cart
     await redis.del(cartKey);
 
-
-    // const cart = await Cart.findOne({ user: userId }).populate("items.product");
-
-    // if (!cart || cart.items.length === 0) {
-    //     throw new apiError(400, "Your cart is empty");
-    // }
-
-    // let totalAmount = 0;
-    // const orderItems = cart.items.map(item => {
-    //     const productPrice = item.product.price;
-    //     const discount = item.product.discount || 0;
-    //     const priceAfterDiscount = productPrice - (productPrice * discount / 100);
-    //     totalAmount += priceAfterDiscount * item.quantity;
-
-    //     return {
-    //         product: item.product._id,
-    //         quantity: item.quantity
-    //     };
-    // });
-    // console.log("Creating order with:");
-    // console.log("Address:", address);
-    // console.log("Latitude:", latitude);
-    // console.log("Longitude:", longitude);
-
-    // const newOrder = await Order.create({
-    //     user: userId,
-    //     items: orderItems,
-    //     totalAmount,
-    //     shippingAddress: {
-    //         latitude: latitude,
-    //         longitude: longitude,
-    //         address: address
-    //     },
-    //     paymentStatus: "Pending", // Assume payment not completed yet
-    //     status: "Pending"
-    // });
-
-    // // Clear cart after placing order
-    // cart.items = [];
-    // await cart.save();
-
-    // get the io:
     const io = getIO();
 
     const deliveryPartners = await User.find(
@@ -421,9 +379,7 @@ const getLiveOrderStatus = asyncHandler(async (req, res) => {
 
 const fetchLivePartnerLocation = asyncHandler(async (req, res) => {
     const orderId = req.params.id;
-    console.log("rached here");
     const location = await getDeliveryLocation(orderId);
-    console.log("fetching location from redis: ", location);
     if (!location) {
         return res.status(200).json(
             new apiResponse(200, null, "Location not available yet")

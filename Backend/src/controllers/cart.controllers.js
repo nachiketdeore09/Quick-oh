@@ -20,38 +20,11 @@ const addProductToCart = asyncHandler(async (req, res) => {
     const cartKey = `cart:${userId}`;
 
     // Increment quantity atomically
-    await redis.hincrby(cartKey, productId, quantity);
+    await redis.hincrby(cartKey, productId, Math.max(1, quantity));
 
     // Optional: auto-expire cart after 24h inactivity
     await redis.expire(cartKey, 86400);
 
-    // OLD Mongo DB Logic
-    // let cart = await Cart.findOne(
-    //     { user: userId }
-    // );
-
-    // if (!cart) {
-    //     cart = await Cart.create(
-    //         { user: userId, items: [] }
-    //     );
-    // }
-
-    // const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
-
-    // if (itemIndex > -1) {
-
-    //     if (quantity === 1) {
-    //         cart.items[itemIndex].quantity += parseInt(quantity || 1, 10);
-    //     } else if (quantity === 0) {
-
-    //         cart.items[itemIndex].quantity -= 1;
-    //     }
-    //     // cart.items[itemIndex].quantity += parseInt(quantity || 1, 10);
-    // } else {
-    //     cart.items.push({ product: productId, quantity: quantity || 1 });
-    // }
-
-    // await cart.save();
     return res
         .status(200)
         .json(
@@ -78,7 +51,7 @@ const decreaseCartItemQuantity = asyncHandler(async (req, res) => {
     } else {
         await redis.hdel(cartKey, productId);
     }
-
+    await redis.expire(cartKey, 86400);
 
     // Old Mongo DB Logic
     // const cart = await Cart.findOne({ user: userId });
@@ -126,13 +99,13 @@ const getCartInfo = asyncHandler(async (req, res) => {
     //REDIS CACHE
     const cartKey = `cart:${userId}`;
     const cartItems = await redis.hgetall(cartKey);
-    await redis.expire(cartKey, 86400); //refreshes the TTL for the cart every time this is called
 
     if (!cartItems || Object.keys(cartItems).length === 0) {
         return res.status(200).json(
             new apiResponse(200, { cart: [], total: 0 }, "Cart is empty")
         );
     }
+    await redis.expire(cartKey, 86400); //refreshes the TTL for the cart every time this is called
 
     const productIds = Object.keys(cartItems);
     const products = await Product.find({ _id: { $in: productIds } })
@@ -183,6 +156,10 @@ const getCartInfo = asyncHandler(async (req, res) => {
 const removeAnItemFromCart = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     const productId = req.body.productId;
+
+    if (!productId) {
+        throw new apiError(400, "Product ID required");
+    }
 
     const cartKey = `cart:${userId}`;
     await redis.hdel(cartKey, productId);

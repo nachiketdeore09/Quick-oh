@@ -68,8 +68,8 @@ const createProduct = asyncHandler(async (req, res) => {
         throw new apiError(401, "Error while creating product");
     }
 
-    await redis.del("categories:all");
-    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+    // Invalidate product cache
+    await redis.incr("products:version");
 
     return res
         .status(200)
@@ -85,9 +85,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
 const updateProduct = asyncHandler(async (req, res) => {
     const productId = req.params.id; // Get product ID from request parameters
-    console.log("product id: ", productId);
     const { productName, description, productCategory, price, discount } = req.body; // Get updated fields from request body
-    console.log(req.body);
 
     // Validate required fields
     if ([productName, description, productCategory, price].some((field) => String(field).trim() === "")) {
@@ -121,9 +119,8 @@ const updateProduct = asyncHandler(async (req, res) => {
         throw new apiError(404, "No such product found");
     }
 
-    // clear the Redis cache
-    await redis.del(`product:${productId}`);
-    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+    // Invalidate product cache
+    await redis.incr("products:version");
 
     // Return the updated product
     return res
@@ -166,8 +163,7 @@ const updateProductPicture = asyncHandler(async (req, res) => {
     await product.save({ validateBeforeSave: false });
 
     // clear the Redis cache
-    await redis.del(`product:${productId}`);
-    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+    await redis.incr("products:version");
 
     return res
         .status(200)
@@ -201,8 +197,7 @@ const toggleStock = asyncHandler(async (req, res) => {
     await product.save({ validateBeforeSave: false });
 
     // clear the Redis cache
-    await redis.del(`product:${productId}`);
-    await redis.keys("products:*").then(keys => keys.length && redis.del(keys));
+    await redis.incr("products:version");
 
     return res
         .status(200)
@@ -227,13 +222,14 @@ const getAllProducts = asyncHandler(async (req, res) => {
     }
 
     // define redis key
-    const CACHE_KEY = `products:page:${pageNumber}:limit:${limitNumber}`;
+    const version = (await redis.get("products:version")) || 1;
+    const CACHE_KEY = `products:v${version}:page:${page}:limit:${limit}`;
 
     //Check Redis first
     const cachedData = await redis.get(CACHE_KEY);
     if (cachedData) {
         return res.status(200).json(
-            new apiResponse(200, JSON.parse(cachedData), "Products fetched from cache")
+            new apiResponse(200, cachedData, "Products fetched from cache")
         );
     }
 
@@ -294,12 +290,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     };
 
     //Cache to Redis
-    await redis.set(
-        CACHE_KEY,
-        JSON.stringify(responsePayload),
-        "EX",
-        300
-    );
+    await redis.set(CACHE_KEY, responsePayload, { ex: 300 });
 
     // Return the paginated response
     return res.status(200).json(
@@ -319,13 +310,14 @@ const getAllProducts = asyncHandler(async (req, res) => {
 const getSingleProduct = asyncHandler(async (req, res) => {
     const productId = req.params.id;
     //Redis key
-    const CACHE_KEY = `product:${id}`;
+    const version = (await redis.get("products:version")) || 1;
+    const CACHE_KEY = `product:v${version}:${id}`;
 
     //Check for Redis
     const cached = await redis.get(CACHE_KEY);
     if (cached) {
         return res.status(200).json(
-            new apiResponse(200, JSON.parse(cached), "Product fetched from cache")
+            new apiResponse(200, cached, "Product fetched from cache")
         );
     }
 
@@ -339,7 +331,7 @@ const getSingleProduct = asyncHandler(async (req, res) => {
     product.searches += 1;
 
     //Cache Loaded Products.
-    await redis.set(CACHE_KEY, JSON.stringify(product), 300, "EX");
+    await redis.set(CACHE_KEY, product, { ex: 300 });
 
     await product.save({ validateBeforeSave: false });
     return res
