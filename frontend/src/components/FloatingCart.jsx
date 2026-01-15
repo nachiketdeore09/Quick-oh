@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -21,20 +21,29 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-const FloatingCart = () => {
+const FloatingCart = ({ openCart, setOpenCart }) => {
   const { cartItems, addToCart, removeOneItem, removeFromCart } = useCart();
-  const [showCart, setShowCart] = useState(false);
+  const showCart = openCart;
+  const setShowCart = setOpenCart;
   const [shippingAddress, setShippingAddress] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
 
+  // useEffect(() => {
+  //   if (openFromNavbar) {
+  //     setShowCart(true);
+  //   }
+  // }, [openFromNavbar]);
+
   const totalPrice = cartItems.reduce(
     (acc, item) =>
       acc + (item.price - (item.price * item.discount) / 100) * item.quantity,
     0
   );
+
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const handlePlaceOrder = async () => {
     if (!shippingAddress || !shippingAddress.address.trim()) {
@@ -70,7 +79,7 @@ const FloatingCart = () => {
   return (
     <>
       {/* Floating Cart Icon */}
-      {cartItems.length > 0 && (
+      {/* {cartItems.length > 0 && (
         <Tooltip title="View Cart">
           <Box
             onClick={() => setShowCart(true)}
@@ -116,7 +125,36 @@ const FloatingCart = () => {
             </Box>
           </Box>
         </Tooltip>
-      )}
+      )} */}
+
+      {/* {totalItems > 0 && (
+        <Button
+          onClick={() => setOpenCart(true)}
+          sx={{
+            ml: 2,
+            px: 3,
+            py: 1.2,
+            borderRadius: "14px",
+            backgroundColor: "#a3e635",
+            color: "#1a1a1a",
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.2,
+            "&:hover": {
+              backgroundColor: "#84cc16",
+            },
+          }}
+        >
+          <ShoppingCartIcon />
+          <Typography sx={{ fontWeight: 700 }}>
+            {totalItems} item{totalItems > 1 ? "s" : ""}
+          </Typography>
+          <Typography sx={{ fontWeight: 700 }}>
+            • ₹{Math.round(totalPrice)}
+          </Typography>
+        </Button>
+      )} */}
 
       {/* Cart Popup */}
       {showCart && (
@@ -152,54 +190,56 @@ const FloatingCart = () => {
           <Divider sx={{ mb: 2 }} />
 
           <List>
-            {cartItems.map((item) => (
-              <ListItem
-                key={item._id}
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 1,
-                  p: 1,
-                  borderRadius: 2,
-                  backgroundColor: "#fff",
-                  boxShadow: 1,
-                }}
-              >
-                <ListItemText
-                  primary={item.productName}
-                  secondary={`₹${(
-                    item.price -
-                    (item.price * item.discount) / 100
-                  ).toFixed(2)} × ${item.quantity}`}
-                  sx={{ color: "#333" }}
-                />
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <IconButton
-                    size="small"
-                    onClick={() => removeOneItem(item)}
-                    sx={{ color: "#1976d2" }}
-                  >
-                    <RemoveIcon />
-                  </IconButton>
-                  <Typography>{item.quantity}</Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => addToCart(item)}
-                    sx={{ color: "#1976d2" }}
-                  >
-                    <AddIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => removeFromCart(item._id)}
-                    sx={{ color: "red" }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-              </ListItem>
-            ))}
+            {cartItems
+              .filter((item) => item.quantity > 0)
+              .map((item) => (
+                <ListItem
+                  key={item._id}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                    p: 1,
+                    borderRadius: 2,
+                    backgroundColor: "#fff",
+                    boxShadow: 1,
+                  }}
+                >
+                  <ListItemText
+                    primary={item.productName}
+                    secondary={`₹${(
+                      item.price -
+                      (item.price * item.discount) / 100
+                    ).toFixed(2)} × ${item.quantity}`}
+                    sx={{ color: "#333" }}
+                  />
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => removeOneItem(item)}
+                      sx={{ color: "#1976d2" }}
+                    >
+                      <RemoveIcon />
+                    </IconButton>
+                    <Typography>{item.quantity}</Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => addToCart(item)}
+                      sx={{ color: "#1976d2" }}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => removeFromCart(item._id)}
+                      sx={{ color: "red" }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  </Box>
+                </ListItem>
+              ))}
           </List>
 
           <Divider sx={{ mt: 2, mb: 2 }} />

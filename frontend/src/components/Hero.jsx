@@ -34,23 +34,15 @@ const Hero = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.7 }}
       >
-        <motion.h1
-          className={styles.heading}
-          initial={{ scale: 0.95 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          Delivering Everything to Your Doorstep
+        <motion.h1 className={styles.heading}>
+          Groceries delivered in{" "}
+          <span className={styles.highlight}>10 minutes</span>
         </motion.h1>
 
-        <motion.p
-          className={styles.subheading}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-        >
-          Quick-oh brings groceries, food, and daily essentials to your home
-          with lightning-fast delivery. Trusted by thousands every day.
+        <motion.p className={styles.subheading}>
+          Fresh groceries, daily essentials, and more delivered to your
+          doorstep. Experience ultra-fast delivery trusted by thousands every
+          day.
         </motion.p>
 
         <motion.div

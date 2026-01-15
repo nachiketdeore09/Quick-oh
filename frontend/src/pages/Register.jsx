@@ -5,15 +5,22 @@ import {
   TextField,
   Button,
   Typography,
-  Alert,
-  Fade,
-  Slide,
+  IconButton,
+  Checkbox,
 } from "@mui/material";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useUser } from "../context/UserContext";
 import { z } from "zod";
+import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import styles from "./Register.module.css"; // ✅ Using CSS module correctly
 
 const registerSchema = z.object({
@@ -36,6 +43,9 @@ const Register = () => {
     address: "",
     profilePicture: null,
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -54,7 +64,10 @@ const Register = () => {
     e.preventDefault();
     setError("");
     setSuccess("");
-
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
     try {
       registerSchema.parse(formData);
 
@@ -95,167 +108,225 @@ const Register = () => {
   };
 
   return (
-    <div className={styles.registerPage}>
-      {/* 🔹 Registration Form */}
-      <Box
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "#f4f7fb",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        px: 2,
+      }}
+    >
+      <Paper
+        elevation={10}
         sx={{
-          minHeight: "calc(100vh - 80px)", // leaves space for navbar height
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          px: 2,
-          position: "relative",
-          zIndex: 2,
-          mt: 6, // margin from navbar
-          mb: 4, // margin at the bottom
+          width: "100%",
+          maxWidth: 530,
+          borderRadius: 4,
+          p: 4,
         }}
       >
-        <Slide direction="up" in={true} mountOnEnter unmountOnExit>
-          <Fade in timeout={700}>
-            <Paper
-              elevation={8}
-              sx={{
-                p: 4,
-                maxWidth: 700,
-                width: "100%",
-                borderRadius: 5,
-                backdropFilter: "blur(12px)",
-                background: "rgba(255, 255, 255, 0.25)",
-                boxShadow: "0 8px 40px rgba(0,0,0,0.3)",
+        {/* Logo */}
+        <Box textAlign="center" mb={2}>
+          <Box
+            sx={{
+              mx: "auto",
+              width: 56,
+              height: 56,
+              bgcolor: "#007cf0",
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 1,
+            }}
+          >
+            <ShoppingBagOutlinedIcon sx={{ color: "#fff", fontSize: 28 }} />
+          </Box>
+          <Typography fontWeight={800} fontSize={26} color="#007cf0">
+            QuickMart
+          </Typography>
+          <Typography fontSize={14} color="#6b7280" mt={1}>
+            Create your account and start shopping
+          </Typography>
+        </Box>
+
+        {/* Form */}
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          {/* Full Name */}
+          <TextField
+            fullWidth
+            label="Full Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            InputProps={{
+              startAdornment: (
+                <PersonOutlineIcon sx={{ mr: 1, color: "#9ca3af" }} />
+              ),
+            }}
+            sx={{ mb: 2 }}
+            required
+          />
+
+          {/* Email + Phone */}
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+            <TextField
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <MailOutlineIcon sx={{ mr: 1, color: "#9ca3af" }} />
+                ),
               }}
-            >
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-                gutterBottom
-                textAlign="center"
-                sx={{
-                  background: "linear-gradient(90deg, #007cf0, #00dfd8)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Create Your Account
-              </Typography>
+              required
+            />
+            <TextField
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <PhoneOutlinedIcon sx={{ mr: 1, color: "#9ca3af" }} />
+                ),
+              }}
+              required
+            />
+          </Box>
 
-              {error && (
-                <Alert severity="error" sx={{ mb: 2, whiteSpace: "pre-line" }}>
-                  {error}
-                </Alert>
-              )}
-              {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  {success}
-                </Alert>
-              )}
+          {/* Password */}
+          <TextField
+            fullWidth
+            label="Password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={formData.password}
+            onChange={handleChange}
+            InputProps={{
+              startAdornment: (
+                <LockOutlinedIcon sx={{ mr: 1, color: "#9ca3af" }} />
+              ),
+              endAdornment: (
+                <IconButton onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? (
+                    <VisibilityOffOutlinedIcon />
+                  ) : (
+                    <VisibilityOutlinedIcon />
+                  )}
+                </IconButton>
+              ),
+            }}
+            sx={{ mt: 2 }}
+            required
+          />
 
-              <Box
-                component="form"
-                onSubmit={handleSubmit}
-                encType="multipart/form-data"
-              >
-                <TextField
-                  fullWidth
-                  label="Full Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                />
-                <TextField
-                  fullWidth
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                />
-                <TextField
-                  fullWidth
-                  label="Password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                />
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  name="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                />
-                <TextField
-                  fullWidth
-                  label="Address"
-                  name="address"
-                  multiline
-                  rows={3}
-                  value={formData.address}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                />
-
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    Profile Picture
-                  </Typography>
-                  <input
-                    type="file"
-                    name="profilePicture"
-                    accept="image/*"
-                    onChange={handleChange}
-                    style={{
-                      padding: "10px",
-                      borderRadius: "6px",
-                      backgroundColor: "rgba(255,255,255,0.8)",
-                      width: "100%",
-                    }}
-                  />
-                </Box>
-
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  sx={{
-                    mt: 4,
-                    py: 1.5,
-                    fontSize: "1rem",
-                    borderRadius: "9999px",
-                    background: "linear-gradient(90deg, #007cf0, #00dfd8)",
-                  }}
+          {/* Confirm Password */}
+          <TextField
+            fullWidth
+            label="Confirm Password"
+            name="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            InputProps={{
+              startAdornment: (
+                <LockOutlinedIcon sx={{ mr: 1, color: "#9ca3af" }} />
+              ),
+              endAdornment: (
+                <IconButton
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  Register
-                </Button>
+                  {showConfirmPassword ? (
+                    <VisibilityOffOutlinedIcon />
+                  ) : (
+                    <VisibilityOutlinedIcon />
+                  )}
+                </IconButton>
+              ),
+            }}
+            sx={{ mt: 2 }}
+            required
+          />
 
-                <Typography
-                  mt={2}
-                  textAlign="center"
-                  fontSize="0.9rem"
-                  sx={{ color: "#555" }}
-                >
-                  Already have an account?{" "}
-                  <Link to="/login" style={{ color: "#00dfd8" }}>
-                    Login
-                  </Link>
+          {/* Terms */}
+          <Box sx={{ display: "flex", gap: 1.5, mt: 2 }}>
+            <Checkbox
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              sx={{ color: "#007cf0" }}
+            />
+            <Typography fontSize={13} color="#6b7280">
+              I agree to the{" "}
+              <Box component="span" color="#007cf0" fontWeight={600}>
+                Terms of Service
+              </Box>{" "}
+              and{" "}
+              <Box component="span" color="#007cf0" fontWeight={600}>
+                Privacy Policy
+              </Box>
+            </Typography>
+          </Box>
+
+          {/* Submit */}
+          <Button
+            fullWidth
+            type="submit"
+            disabled={!agreed}
+            sx={{
+              mt: 3,
+              py: 1.5,
+              borderRadius: 2,
+              bgcolor: "#84cc16",
+              color: "#1a1a1a",
+              fontWeight: 700,
+              "&:hover": { bgcolor: "#65a30d" },
+            }}
+          >
+            Create Account
+          </Button>
+        </Box>
+
+        {/* Features */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 3,
+            mt: 3,
+            flexWrap: "wrap",
+          }}
+        >
+          {["10 min delivery", "No minimum order", "Fresh products"].map(
+            (text) => (
+              <Box key={text} sx={{ display: "flex", gap: 0.5 }}>
+                <CheckCircleOutlineIcon
+                  sx={{ fontSize: 16, color: "#84cc16" }}
+                />
+                <Typography fontSize={12} color="#6b7280">
+                  {text}
                 </Typography>
               </Box>
-            </Paper>
-          </Fade>
-        </Slide>
-      </Box>
-    </div>
+            )
+          )}
+        </Box>
+
+        {/* Login */}
+        <Typography textAlign="center" mt={3} fontSize={14} color="#6b7280">
+          Already have an account?
+          <Box
+            component={Link}
+            to="/login"
+            sx={{ color: "#007cf0", fontWeight: 600, ml: 0.5 }}
+          >
+            Sign in
+          </Box>
+        </Typography>
+      </Paper>
+    </Box>
   );
 };
 

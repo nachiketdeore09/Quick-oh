@@ -7,6 +7,7 @@ import Categories from "../components/Categories.jsx";
 import InfoSection from "../components/InfoSection.jsx";
 import Footer from "../components/Footer.jsx";
 import Hero from "../components/Hero";
+import HowItWorks from "../components/howItWorks.jsx";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Home = () => {
     <>
       {/* {Hero Section start}  */}
       <Hero />
+      {/* <HowItWorks /> */}
       <Categories />
       <InfoSection />
     </>

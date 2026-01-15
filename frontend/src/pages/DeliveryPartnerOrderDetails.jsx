@@ -172,10 +172,12 @@ const DeliveryPartnerOrderDetails = () => {
       </Typography>
 
       {/* 🗺️ Live Route Map */}
-      <LiveRouteMap
-        customerPosition={customerPosition}
-        partnerPosition={partnerPosition}
-      />
+      <Box sx={{ width: "100%", height: "420px" }}>
+        <LiveRouteMap
+          customerPosition={customerPosition}
+          partnerPosition={partnerPosition}
+        />
+      </Box>
 
       {/* 📦 Order Details */}
       <Card sx={{ borderRadius: 3, boxShadow: 4 }}>

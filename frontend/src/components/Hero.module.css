@@ -1,11 +1,15 @@
 .heroContainer {
-  height: 90vh;
+   min-height: 85vh;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #f9fafb, #d2ecef);
-  padding: 2rem 4rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  gap: 4rem;
+  background: linear-gradient(
+    180deg,
+    hsl(200, 60%, 97%) 0%,
+    hsl(0, 0%, 98%) 100%
+  );
+  padding: 4rem 4rem;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   overflow: hidden;
 }
 
@@ -19,48 +23,56 @@
 }
 
 .backgroundVideo {
-  width: 90%;
-  height: 85%;
-  border-radius: 24px;
+  width: 92%;
+  height: 88%;
+  border-radius: 28px;
   object-fit: cover;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
-  transition: transform 0.5s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  transition: transform 0.6s ease, box-shadow 0.6s ease;
 }
 
 .backgroundVideo:hover {
-  transform: scale(1.02);
+  transform: scale(1.03);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
 }
 
 /* Right: Content Section */
 .content {
-  flex: 1.4;
-  text-align: start;
-  padding: 3rem 2rem;
-  background-color: rgba(255, 255, 255, 0);
-  border-radius: 24px;
-  transition: all 0.3s ease-in-out;
+  flex: 1.2;
+  max-width: 520px;
+  padding: 2rem 1rem;
 }
 
 .heading {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(90deg, #007cf0, #00dfd8);
+  font-size: 3.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.25rem;
+  color: hsl(220, 20%, 10%);
+}
+
+.highlight {
+  background: linear-gradient(
+  135deg,
+  hsl(205, 100%, 47%) 0%,
+  hsl(186, 100%, 44%) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .subheading {
-  font-size: 1.25rem;
-  color: #555;
-  margin-bottom: 2rem;
+  font-size: 1.15rem;
+  color: hsl(220, 10%, 45%);
+  line-height: 1.7;
+  max-width: 460px;
+  margin-bottom: 2.5rem;
 }
 
 .buttons {
   display: flex;
-  flex-direction: initial;
-  justify-content: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .primaryBtn,
@@ -74,57 +86,65 @@
 }
 
 .primaryBtn {
-  background-color: #007cf0;
+  padding: 0.9rem 2.4rem;
+  font-size: 1rem;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    hsl(205, 100%, 47%) 0%,
+    hsl(186, 100%, 44%) 100%
+  );
   color: white;
-  box-shadow: 0 4px 15px rgba(0, 124, 240, 0.3);
+  font-weight: 600;
+  box-shadow: 0 8px 24px hsl(75, 85%, 45%, 0.35);
 }
 
 .primaryBtn:hover {
-  background-color: #005fcc;
-  transform: translateY(-2px);
+  
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px hsl(75, 85%, 45%, 0.45);
 }
 
 .secondaryBtn {
-  background-color: #e0f7fa;
-  color: #007cf0;
-  box-shadow: 0 4px 15px rgba(0, 124, 240, 0.1);
+  padding: 0.9rem 2.2rem;
+  font-size: 1rem;
+  border-radius: 14px;
+  background: white;
+  color: hsl(220, 20%, 15%);
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .secondaryBtn:hover {
-  background-color: #b2ebf2;
-  transform: translateY(-2px);
+  background: hsl(235, 100%, 95%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 /* Responsive Design */
 @media (max-width: 900px) {
   .heroContainer {
     flex-direction: column;
-    padding: 2rem;
-  }
-
-  .videoSection {
-    width: 100%;
-    margin-bottom: 2rem;
+    padding: 2.5rem 1.5rem;
+    gap: 2.5rem;
   }
 
   .backgroundVideo {
     width: 100%;
-    height: 250px;
-  }
-
-  .content {
-    width: 100%;
+    height: 260px;
   }
 
   .heading {
-    font-size: 2.2rem;
-  }
-
-  .subheading {
-    font-size: 1.1rem;
+    font-size: 2.4rem;
   }
 
   .buttons {
     flex-direction: column;
+    width: 100%;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%;
   }
 }

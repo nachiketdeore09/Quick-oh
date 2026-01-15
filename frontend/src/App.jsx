@@ -16,15 +16,19 @@ import CustomerOrderDetails from "./pages/CustomerOrderDetails.jsx";
 import { ToastContainer } from "react-toastify";
 import Footer from "./components/Footer.jsx";
 import DeliveryPartnerOrderDetails from "./pages/DeliveryPartnerOrderDetails.jsx";
-
+import CartPage from "./pages/cartPage.jsx";
+import FloatingCart from "./components/FloatingCart.jsx";
 import "./App.css";
 
 function App() {
+  const [openCart, setOpenCart] = useState(false);
   return (
     <Router>
       <div className="App">
         <ToastContainer />
-        <Navbar />
+        <Navbar onCartClick={() => setOpenCart(true)} />
+        {/* ✅ Global cart popup */}
+        {/* <FloatingCart openCart={openCart} setOpenCart={setOpenCart} /> */}
         <main className="content">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -53,6 +57,15 @@ function App() {
               path="/deliveryPartner-delivery-details/:orderId"
               element={<DeliveryPartnerOrderDetails />}
             />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Add more routes as needed */}
           </Routes>
         </main>

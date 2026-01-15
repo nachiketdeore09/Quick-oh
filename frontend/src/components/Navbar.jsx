@@ -21,8 +21,10 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import Badge from "@mui/material/Badge";
 import Popover from "@mui/material/Popover";
 import moment from "moment";
+import { useCart } from "../context/CartContext";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
-function Navbar() {
+function Navbar({ onCartClick }) {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -32,15 +34,25 @@ function Navbar() {
   const [anchorElBell, setAnchorElBell] = useState(null);
   const [currentOrder, setCurrentOrder] = useState(null);
   const [hasNewOrder, setHasNewOrder] = useState(false);
-
+  const { cartItems } = useCart();
   const handleOpenNavMenu = (e) => setAnchorElNav(e.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
   const handleOpenUserMenu = (e) => setAnchorElUser(e.currentTarget);
   const handleCloseUserMenu = () => setAnchorElUser(null);
 
   useEffect(() => {
-    if (isAuthenticated) fetchUserOrders();
+    if (isAuthenticated && role !== "deliveryPartner") {
+      fetchUserOrders();
+    }
   }, [isAuthenticated]);
+
+  const totalPrice = cartItems.reduce(
+    (acc, item) =>
+      acc + (item.price - (item.price * item.discount) / 100) * item.quantity,
+    0
+  );
+
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const fetchUserOrders = async () => {
     try {
@@ -114,7 +126,7 @@ function Navbar() {
     <AppBar
       position="sticky"
       sx={{
-        background: "linear-gradient(90deg, #007cf0, #00dfd8)",
+        background: "#007cf0",
         boxShadow: "0px 4px 15px rgba(0,0,0,0.2)",
         px: { xs: 2, md: 6 },
         py: 1,
@@ -125,7 +137,7 @@ function Navbar() {
         disableGutters
         sx={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "space-around",
           alignItems: "center",
           flexWrap: "wrap",
         }}
@@ -322,84 +334,34 @@ function Navbar() {
           </Box>
         </Box>
 
-        {/* 🔔 Reminder Bell */}
-        {/* <Box
-          sx={{
-            display: { xs: "none", md: "flex" },
-            alignItems: "center",
-            mr: 1,
-          }}
-        >
-          <IconButton color="inherit" onClick={handleBellClick}>
-            <Badge color="error" variant={hasNewOrder ? "dot" : "standard"}>
-              <NotificationsIcon sx={{ color: "white" }} />
-            </Badge>
-          </IconButton>
-
-          <Popover
-            open={Boolean(anchorElBell)}
-            anchorEl={anchorElBell}
-            onClose={handleBellClose}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "center",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "center",
-            }}
-            PaperProps={{
-              sx: { p: 2, minWidth: 220 },
+        {isAuthenticated && role !== "deliveryPartner" && totalItems > 0 && (
+          <Button
+            onClick={() => navigate("/cart")}
+            sx={{
+              ml: 2,
+              px: 3,
+              py: 1.2,
+              borderRadius: "14px",
+              backgroundColor: "#a3e635",
+              color: "#1a1a1a",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              "&:hover": {
+                backgroundColor: "#84cc16",
+              },
             }}
           >
-            {currentOrder ? (
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Current Order
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Order ID:{" "}
-                  <span style={{ color: "#007cf0", fontWeight: 500 }}>
-                    {currentOrder._id.slice(-6)}
-                  </span>
-                </Typography>
-                <Typography variant="body2">
-                  Status:{" "}
-                  <b
-                    style={{
-                      color:
-                        currentOrder.status === "Preparing"
-                          ? "#f57c00"
-                          : currentOrder.status === "Out for Delivery"
-                          ? "#0288d1"
-                          : "#43a047",
-                    }}
-                  >
-                    {currentOrder.status}
-                  </b>
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {moment(currentOrder.createdAt).fromNow()}
-                </Typography>
-                <Button
-                  fullWidth
-                  size="small"
-                  sx={{ mt: 1, textTransform: "none" }}
-                  onClick={() => {
-                    handleBellClose();
-                    navigate(`/delivery-details/${currentOrder._id}`);
-                  }}
-                >
-                  View Details
-                </Button>
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ textAlign: "center" }}>
-                💤 No current orders
-              </Typography>
-            )}
-          </Popover>
-        </Box> */}
+            <ShoppingCartIcon />
+            <Typography sx={{ fontWeight: 700 }}>
+              {totalItems} item{totalItems > 1 ? "s" : ""}
+            </Typography>
+            <Typography sx={{ fontWeight: 700 }}>
+              • ₹{Math.round(totalPrice)}
+            </Typography>
+          </Button>
+        )}
 
         {/* 👤 Profile Dropdown */}
         <Box>

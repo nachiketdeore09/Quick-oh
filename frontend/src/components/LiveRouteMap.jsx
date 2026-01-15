@@ -63,14 +63,12 @@ const Routing = ({ from, to }) => {
 
 const LiveRouteMap = memo(({ customerPosition, partnerPosition }) => {
   const center = partnerPosition || customerPosition;
-  // console.log(customerPosition);
-  // console.log(partnerPosition);
 
   return (
     <MapContainer
       center={center}
       zoom={14}
-      style={{ height: "400px", width: "100%" }}
+      style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"

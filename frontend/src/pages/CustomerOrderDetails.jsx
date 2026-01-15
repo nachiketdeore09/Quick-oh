@@ -14,15 +14,10 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Paper,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Polyline,
-} from "react-leaflet";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import ThankYouPopup from "../components/ThankyouPopup.jsx";
@@ -30,6 +25,8 @@ import ChatIcon from "@mui/icons-material/Chat";
 import ChatWindow from "../components/chatWindow.jsx";
 import LiveRouteMap from "../components/LiveRouteMap.jsx";
 import { useChat } from "../context/ChatContext";
+import { useUser } from "../context/UserContext.jsx";
+import { useCart } from "../context/CartContext.jsx";
 import socket from "../socket";
 
 // Fix Leaflet marker issue
@@ -43,13 +40,16 @@ L.Icon.Default.mergeOptions({
 
 const CustomerOrderDetails = () => {
   const { orderId } = useParams();
+  const { role } = useUser();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [partnerPosition, setPartnerPosition] = useState(null);
+  const [partnerId, setPartnerId] = useState(null);
+  const [partner, setPartner] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
   const [openChat, setOpenChat] = useState(false);
-
+  const { clearCart } = useCart();
   const [confirming, setConfirming] = useState(false);
   const [reloading, setReloading] = useState(false);
   const navigate = useNavigate();
@@ -87,23 +87,17 @@ const CustomerOrderDetails = () => {
         { withCredentials: true }
       );
       setOrder(res.data.data);
-
-      const currRes = await axios.get(
-        // "http://localhost:8000/api/v1/users/current-user",
-        "https://quick-oh.onrender.com/api/v1/users/current-user",
-        { withCredentials: true }
-      );
-      if (
-        currRes.data.data.role === "customer" &&
-        res.data.data.status === "Delivered"
-      ) {
+      if (res.data.data.assignedTo) {
+        setPartnerId(res.data.data.assignedTo);
+      }
+      if (role === "customer" && res.data.data.status === "Delivered") {
         setShowThankYou(true);
-
+        clearCart();
         // Auto close after 5 seconds and navigate
         setTimeout(() => {
           setShowThankYou(false);
           navigate("/shop");
-        }, 5000);
+        }, 3000);
       }
     } catch (err) {
       console.error("Failed to fetch order:", err);
@@ -114,6 +108,28 @@ const CustomerOrderDetails = () => {
   }, [orderId, navigate, reloading]);
 
   useEffect(() => {
+    if (!partnerId) return;
+
+    const fetchPartner = async () => {
+      try {
+        const res = await axios.get(
+          "https://quick-oh.onrender.com/api/v1/users/getUserById",
+          {
+            params: { userId: partnerId },
+            withCredentials: true,
+          }
+        );
+        console.log(res);
+        setPartner(res.data.data);
+      } catch (error) {
+        console.error("Failed to fetch delivery partner", error);
+      }
+    };
+
+    fetchPartner();
+  }, [partnerId]);
+
+  useEffect(() => {
     fetchOrderDetails();
   }, [fetchOrderDetails]);
 
@@ -122,7 +138,8 @@ const CustomerOrderDetails = () => {
     const fetchLastLocation = async () => {
       try {
         const res = await axios.get(
-          `http://quick-oh.onrender.com/api/v1/order/livePartnerLocation/${orderId}`,
+          // `http://localhost:8000/api/v1/order/livePartnerLocation/${orderId}`,
+          `https://quick-oh.onrender.com/api/v1/order/livePartnerLocation/${orderId}`,
           { withCredentials: true }
         );
         console.log(res);
@@ -168,29 +185,6 @@ const CustomerOrderDetails = () => {
     };
   }, [orderId, order, currentUser, navigate]);
 
-  const handleConfirmDelivery = async () => {
-    try {
-      setConfirming(true);
-      const res = await axios.post(
-        // `http://localhost:8000/api/v1/order/updateOrderStatus/${orderId}`,
-        `https://quick-oh.onrender.com/api/v1/order/updateOrderStatus/${orderId}`,
-        { status: "Delivered" },
-        { withCredentials: true }
-      );
-      alert("✅ Delivery confirmed successfully!");
-      setOrder((prev) => ({ ...prev, status: "Delivered" }));
-      socket.emit("order-delivered", res.data.data);
-      if (currentUser && order.assignedTo === currentUser._id) {
-        navigate("/active-orders");
-      }
-    } catch (err) {
-      console.error("Failed to confirm delivery:", err);
-      alert("❌ Failed to confirm delivery");
-    } finally {
-      setConfirming(false);
-    }
-  };
-
   // 🔄 Reload handler (refresh order details without page reload)
   const handleReload = async () => {
     setReloading(true);
@@ -225,61 +219,74 @@ const CustomerOrderDetails = () => {
       order.assignedTo?._id === currentUser._id);
 
   return (
-    <Box
-      sx={{
-        maxWidth: 900,
-        mx: "auto",
-        p: 3,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 3,
-      }}
-    >
+    <Box sx={{ width: "100%", bgcolor: "#f7f7f7", pb: 8 }}>
+      {/*-------- Title -----------*/}
       <Box
         sx={{
+          px: 3,
+          py: 2,
+          bgcolor: "white",
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
-          justifyContent: "center",
-          gap: 1,
+          borderBottom: "1px solid #e5e7eb",
         }}
       >
-        <Typography variant="h4" fontWeight="bold" color="primary">
-          Live Delivery Tracking
-        </Typography>
-        <Tooltip title="Reload Delivery Details">
-          <IconButton
-            onClick={handleReload}
-            color="primary"
-            disabled={reloading}
-            sx={{
-              transition: "transform 0.2s",
-              "&:hover": { transform: "rotate(90deg)" },
-            }}
-          >
-            {reloading ? (
-              <CircularProgress size={20} color="primary" />
-            ) : (
-              <RefreshIcon />
-            )}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <IconButton onClick={() => navigate(-1)}>
+            <ArrowBackIcon />
           </IconButton>
-        </Tooltip>
+          <Box>
+            <Typography fontWeight={700}>Track Order</Typography>
+            <Typography fontSize={13} color="#777">
+              Order #{order._id.slice(-6)}
+            </Typography>
+          </Box>
+          {/*-------- Reload Button -----------*/}
+          <Tooltip title="Reload Delivery Details">
+            <IconButton
+              onClick={handleReload}
+              color="primary"
+              disabled={reloading}
+              sx={{
+                transition: "transform 0.2s",
+                "&:hover": { transform: "rotate(90deg)" },
+              }}
+            >
+              {reloading ? (
+                <CircularProgress size={20} color="primary" />
+              ) : (
+                <RefreshIcon />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        <Box textAlign="right">
+          <Typography fontSize={13} color="#7cb518">
+            Arriving in
+          </Typography>
+          <Typography fontWeight={800} fontSize={18}>
+            8 mins
+          </Typography>
+        </Box>
       </Box>
 
+      {/*-------- Map -----------*/}
       <Box
         sx={{
-          borderRadius: 2,
-          overflow: "hidden",
-          boxShadow: 3,
           width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          height: "420px",
         }}
       >
         <Box
           sx={{
-            borderRadius: 2,
-            overflow: "hidden",
-            boxShadow: 3,
-            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            width: "90%",
+            height: "420px",
           }}
         >
           <LiveRouteMap
@@ -288,92 +295,91 @@ const CustomerOrderDetails = () => {
           />
         </Box>
       </Box>
+      {/*-------- Delivery partner Card -----------*/}
+      {partnerPosition ? (
+        <Box sx={{ px: 3, mt: 3 }}>
+          <Paper sx={{ p: 2, borderRadius: "16px" }}>
+            <Typography fontWeight={700}>Delivery Partner</Typography>
 
-      <Card sx={{ width: "100%", borderRadius: 3, boxShadow: 4, p: 2 }}>
-        <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Order #{order._id}
-          </Typography>
-
-          <Divider sx={{ mb: 2 }} />
-
-          <Typography>
-            <strong>Customer:</strong> {order.user?.name} ({order.user?.email})
-          </Typography>
-
-          <Typography sx={{ mt: 1 }}>
-            <strong>Status:</strong>{" "}
-            <Chip
-              label={order.status}
-              color={
-                order.status === "Delivered"
-                  ? "success"
-                  : order.status === "Pending"
-                  ? "warning"
-                  : "primary"
-              }
-              size="small"
-            />
-          </Typography>
-
-          <Typography sx={{ mt: 1 }}>
-            <strong>Payment:</strong> {order.paymentStatus}
-          </Typography>
-          <Typography sx={{ mt: 1 }}>
-            <strong>Total Amount:</strong> ₹{order.totalAmount}
-          </Typography>
-          <Typography sx={{ mt: 1 }}>
-            <strong>Shipping Address:</strong> {address}
-          </Typography>
-
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Items
-          </Typography>
-          <List dense>
-            {order.items.map((item, idx) => (
-              <ListItem key={idx}>
-                {item.product?.productName} × {item.quantity}
-              </ListItem>
-            ))}
-          </List>
-
-          {isDeliveryPartner && order.status !== "Delivered" && (
-            <Box textAlign="center" mt={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleConfirmDelivery}
-                disabled={confirming}
-                sx={{
-                  px: 4,
-                  py: 1,
-                  borderRadius: 2,
-                  fontWeight: 600,
-                  textTransform: "none",
-                }}
-              >
-                {confirming ? "Confirming..." : "Confirm Delivery"}
-              </Button>
-            </Box>
-          )}
-
-          {order.status === "Delivered" && (
             <Box
-              mt={3}
-              p={2}
               sx={{
-                backgroundColor: "rgba(46,125,50,0.1)",
-                borderLeft: "4px solid #2e7d32",
-                borderRadius: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mt: 1,
               }}
             >
-              <Typography color="success.main" fontWeight="bold">
-                ✅ Order has been delivered successfully!
+              <Typography>{partner?.name}• ⭐ 4.8</Typography>
+
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button variant="outlined">Call</Button>
+                <Button
+                  variant="contained"
+                  sx={{ bgcolor: "#a3e635", color: "#1a1a1a" }}
+                >
+                  Chat
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        </Box>
+      ) : null}
+      {/*-------- order details -----------*/}
+      <Box sx={{ px: 3, mt: 3 }}>
+        <Paper sx={{ p: 2, borderRadius: "16px" }}>
+          <Typography fontWeight={700} mb={1}>
+            Order Details
+          </Typography>
+
+          {order.items.map((item, idx) => (
+            <Box
+              key={idx}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 1,
+                borderBottom: "1px solid #eee",
+              }}
+            >
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <img
+                  src={item.product.productImage}
+                  alt=""
+                  style={{ width: 50, height: 50, borderRadius: 10 }}
+                />
+                <Box>
+                  <Typography fontWeight={600}>
+                    {item.product.productName}
+                  </Typography>
+                  <Typography fontSize={13} color="#777">
+                    × {item.quantity}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography fontWeight={700}>
+                ₹{item.product.price * item.quantity}
               </Typography>
             </Box>
-          )}
-        </CardContent>
-      </Card>
+          ))}
+
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+            <Typography fontWeight={700}>Total</Typography>
+            <Typography fontWeight={800}>₹{order.totalAmount}</Typography>
+          </Box>
+        </Paper>
+      </Box>
+      {/*-------- delivery address -----------*/}
+      <Box sx={{ px: 3, mt: 3 }}>
+        <Paper sx={{ p: 2, borderRadius: "16px" }}>
+          <Typography fontWeight={700}>Delivery Address</Typography>
+          <Typography sx={{ mt: 1, color: "#555" }}>
+            {order.shippingAddress.address}
+          </Typography>
+        </Paper>
+      </Box>
+
       <ThankYouPopup
         open={showThankYou}
         onClose={() => setShowThankYou(false)}

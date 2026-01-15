@@ -81,194 +81,249 @@ const Login = () => {
   };
 
   return (
-    <div
-      style={{
-        position: "relative",
-        height: "100vh",
-        overflow: "hidden",
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(135deg, #f8fafc 0%, #eef2f7 50%, #e5edf5 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        px: 2,
+        fontFamily: "'Inter', sans-serif",
       }}
     >
-      {/* 🔹 Dark Overlay */}
-
-      <Box
+      <Paper
+        elevation={0}
         sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          px: 2,
-          position: "relative",
-          zIndex: 2,
-          paddingTop: "2rem",
-          paddingBottom: "2rem",
+          width: "100%",
+          maxWidth: 530,
+          p: "48px 40px",
+          borderRadius: "24px",
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.22)",
+          color: "#111827",
         }}
       >
-        <Slide direction="up" in={true} mountOnEnter unmountOnExit>
-          <Fade in timeout={700}>
-            <Paper
-              elevation={8}
-              sx={{
-                p: 4,
-                maxWidth: 500,
-                width: "100%",
-                borderRadius: 5,
-                backdropFilter: "blur(12px)",
-                background: "rgba(255, 255, 255, 0.25)",
-                boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
-              }}
-            >
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-                gutterBottom
-                textAlign="center"
-                sx={{
-                  background: "linear-gradient(90deg, #007cf0, #00dfd8)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Welcome Back
-              </Typography>
-              {errors.length > 0 && (
-                <Box sx={{ mt: 2, mb: 2 }}>
-                  <ul style={{ color: "#ff4d4d", marginLeft: "1rem" }}>
-                    {errors.map((err, index) => (
-                      <li
-                        key={index}
-                        style={{ marginBottom: "4px", fontSize: "0.9rem" }}
-                      >
-                        {err}
-                      </li>
-                    ))}
-                  </ul>
-                </Box>
-              )}
+        {/* Logo */}
+        <Box sx={{ textAlign: "center", mb: 1 }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              mx: "auto",
+              mb: 1,
+              borderRadius: "14px",
+              background: "linear-gradient(135deg, #007cf0, #00dfd8)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 6px 16px #007cf048",
+              fontWeight: 900,
+              color: "#1a1a1a",
+            }}
+          >
+            🛍️
+          </Box>
 
-              <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                  InputProps={{
-                    style: { color: "#555" },
-                  }}
-                  InputLabelProps={{
-                    style: { color: "#555" },
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#555",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#00dfd8",
-                      },
-                    },
-                  }}
-                />
+          <Typography
+            sx={{
+              fontSize: 28,
+              fontWeight: 700,
+              background: "#007cf0",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            Quick-oh.
+          </Typography>
 
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  name="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                  InputProps={{
-                    style: { color: "#555" },
-                  }}
-                  InputLabelProps={{
-                    style: { color: "#555" },
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#555",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#00dfd8",
-                      },
-                    },
-                  }}
-                />
+          <Typography
+            sx={{
+              fontSize: 15,
+              color: "#6b7280",
+              mt: 1,
+              mb: 4,
+            }}
+          >
+            Welcome back! Get groceries in 10 minutes
+          </Typography>
+        </Box>
 
-                <TextField
-                  fullWidth
-                  label="Password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  margin="normal"
-                  required
-                  InputProps={{
-                    style: { color: "#555" },
-                  }}
-                  InputLabelProps={{
-                    style: { color: "#555" },
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#555",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#00dfd8",
-                      },
-                    },
-                  }}
-                />
+        {/* Errors */}
+        {errors.length > 0 && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errors.map((e, i) => (
+              <div key={i}>{e}</div>
+            ))}
+          </Alert>
+        )}
 
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="contained"
-                  sx={{
-                    mt: 4,
-                    py: 1.5,
-                    fontSize: "1rem",
-                    borderRadius: "9999px",
-                    background: "linear-gradient(90deg, #007cf0, #00dfd8)",
-                    textTransform: "none",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Login
-                </Button>
+        {/* Form */}
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ display: "grid", gap: 2 }}
+        >
+          <TextField
+            label="Email Address"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            fullWidth
+            InputProps={{
+              style: {
+                background: "#f9fafb",
+                borderRadius: 12,
+              },
+            }}
+            InputLabelProps={{ style: { color: "#6b7280" } }}
+          />
 
-                <Typography
-                  mt={2}
-                  textAlign="center"
-                  fontSize="0.9rem"
-                  sx={{ color: "#555" }}
-                >
-                  Don’t have an account?{" "}
-                  <MuiLink
-                    component={Link}
-                    to="/register"
-                    underline="hover"
-                    sx={{
-                      color: "#00dfd8",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Register here
-                  </MuiLink>
-                </Typography>
-              </Box>
-            </Paper>
-          </Fade>
-        </Slide>
-      </Box>
-    </div>
+          <TextField
+            label="Phone Number"
+            name="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            required
+            fullWidth
+            InputProps={{
+              style: {
+                background: "#f9fafb",
+                borderRadius: 12,
+              },
+            }}
+            InputLabelProps={{ style: { color: "#6b7280" } }}
+          />
+
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            fullWidth
+            InputProps={{
+              style: {
+                background: "#f9fafb",
+                borderRadius: 12,
+              },
+            }}
+            InputLabelProps={{ style: { color: "#6b7280" } }}
+          />
+
+          <Typography
+            textAlign="right"
+            sx={{
+              fontSize: 13,
+              color: "#000000",
+              cursor: "pointer",
+              fontWeight: 500,
+            }}
+          >
+            Forgot password?
+          </Typography>
+
+          <Button
+            type="submit"
+            fullWidth
+            sx={{
+              mt: 1,
+              py: 1.6,
+              borderRadius: 12,
+              fontWeight: 700,
+              fontSize: 16,
+              background: "linear-gradient(135deg,#84cc16,#65a30d)",
+              color: "#1a1a1a",
+              boxShadow: "0 6px 18px rgba(132,204,22,0.35)",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 10px 28px rgba(132,204,22,0.45)",
+              },
+            }}
+          >
+            ⚡ Sign In
+          </Button>
+        </Box>
+
+        {/* Divider */}
+        <Box sx={{ display: "flex", alignItems: "center", my: 3 }}>
+          <Box sx={{ flex: 1, height: 1, bgcolor: "#e5e7eb" }} />
+          <Typography sx={{ mx: 2, fontSize: 13, color: "#9ca3af" }}>
+            or continue with
+          </Typography>
+          <Box sx={{ flex: 1, height: 1, bgcolor: "#e5e7eb" }} />
+        </Box>
+
+        {/* Social */}
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            fullWidth
+            sx={{
+              color: "#374151",
+              border: "1px solid #e5e7eb",
+              background: "#ffffff",
+            }}
+          >
+            Google
+          </Button>
+          <Button
+            fullWidth
+            sx={{
+              color: "#374151",
+              border: "1px solid #e5e7eb",
+              background: "#ffffff",
+            }}
+          >
+            Facebook
+          </Button>
+        </Box>
+
+        {/* Footer */}
+        <Typography textAlign="center" mt={3} fontSize={14} color="#6b7280">
+          Don’t have an account?
+          <MuiLink
+            component={Link}
+            to="/register"
+            sx={{ color: "#007cf0", ml: 0.5, fontWeight: 600 }}
+          >
+            Sign up
+          </MuiLink>
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 3,
+            mt: 3,
+            pt: 2,
+            borderTop: "1px solid #e5e7eb",
+            fontSize: 13,
+          }}
+        >
+          <MuiLink
+            component={Link}
+            to="/delivery-login"
+            sx={{ color: "#9ca3af" }}
+          >
+            Partner Login
+          </MuiLink>
+          <MuiLink
+            component={Link}
+            to="/vendor/login"
+            sx={{ color: "#9ca3af" }}
+          >
+            Admin Login
+          </MuiLink>
+        </Box>
+      </Paper>
+    </Box>
   );
 };
 

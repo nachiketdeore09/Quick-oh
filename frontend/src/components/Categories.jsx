@@ -16,8 +16,9 @@ const Categories = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
-        // "http://localhost:8000/api/v1/category/getAllCategories"
-        "https://quick-oh.onrender.com/api/v1/category/getAllCategories"
+        // "http://localhost:8000/api/v1/category/getAllCategories",
+        "https://quick-oh.onrender.com/api/v1/category/getAllCategories",
+        { withCredentials: true }
       );
       setCategories(response.data.data || []);
     } catch (error) {
