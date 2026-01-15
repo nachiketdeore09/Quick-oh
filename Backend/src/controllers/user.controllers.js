@@ -359,6 +359,21 @@ const updateUserProfilePicture = asyncHandler(async (req, res) => {
         )
 })
 
+const getUserById = asyncHandler(async (req, res) => {
+    const { userId } = req.query;
+
+    if (!userId) {
+        throw new apiError(400, "User ID is required");
+    }
+    const user = await User.findById(userId)
+    if (!user) {
+        return new apiError(400, "No valid Users");
+    }
+    return res.status(200).json(
+        new apiResponse(200, user, "returned the User")
+    );
+})
+
 // TODO -> further i have to write the getUserOrderHistory and getUserCart controller
 
 export {
@@ -370,5 +385,6 @@ export {
     changeCurrentUserPassword,
     getCurrentUser,
     updateAccountDetails,
-    updateUserProfilePicture
+    updateUserProfilePicture,
+    getUserById
 };
