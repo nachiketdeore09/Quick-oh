@@ -10,12 +10,13 @@ export const OrderCard = ({ order }: { order: Order }) => {
   const statusConfig = {
     Pending: { icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10" },
     Accepted: { icon: CheckCircle2, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+    Assigned: { icon: Truck, color: "text-yellow-500", bg: "bg-yellow-500/10" },
     Shipped: { icon: Truck, color: "text-orange-500", bg: "bg-orange-500/10" },
     Delivered: { icon: Package, color: "text-green-500", bg: "bg-green-500/10" },
     Cancelled: { icon: Package, color: "text-red-500", bg: "bg-red-500/10" }
   };
   
-  const config = statusConfig[order.status] || statusConfig.Pending;
+  const config = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.Pending;
   const StatusIcon = config.icon;
 
   return (

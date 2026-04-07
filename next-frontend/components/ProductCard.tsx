@@ -6,7 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const ProductCard = ({ product }: { product: Product }) => {
+export const ProductCard = ({ product, onSelect }: { product: Product; onSelect?: (p: Product) => void }) => {
   const { cart, addToCart, updateQuantity } = useCart();
   
   // Find cart quantity based on `_id` now
@@ -19,8 +19,11 @@ export const ProductCard = ({ product }: { product: Product }) => {
     : product.price;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition flex flex-col h-full group">
-      <div className="relative w-full h-40 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden mb-4 p-4 flex items-center justify-center cursor-pointer">
+    <div 
+      onClick={() => onSelect?.(product)}
+      className="bg-white dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition flex flex-col h-full group cursor-pointer"
+    >
+      <div className="relative w-full h-40 bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden mb-4 p-4 flex items-center justify-center">
         {product.discount > 0 && (
           <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg z-10">
             {product.discount}% OFF

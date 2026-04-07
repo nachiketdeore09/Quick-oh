@@ -20,6 +20,45 @@ const partnerIcon = L.icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
+function Routing({ from, to }: { from: [number, number], to: [number, number] }) {
+  const [route, setRoute] = React.useState<[number, number][]>([from, to]);
+
+  useEffect(() => {
+    if (!from || !to) return;
+
+    const fetchRoute = async () => {
+      try {
+        // OSRM coordinates are [lng, lat]
+        const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (data.code === "Ok" && data.routes?.[0]?.geometry?.coordinates) {
+          // GeoJSON coordinates are [lng, lat], Leaflet needs [lat, lng]
+          const coords = data.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+          setRoute(coords);
+        } else {
+          setRoute([from, to]); // Fallback to straight line
+        }
+      } catch (e) {
+        setRoute([from, to]); // Fallback
+      }
+    };
+
+    fetchRoute();
+  }, [from[0], from[1], to[0], to[1]]);
+
+  return (
+    <Polyline 
+      positions={route} 
+      color="#00dfd8" 
+      weight={6} 
+      opacity={0.8}
+      lineCap="round"
+      lineJoin="round"
+    />
+  );
+}
 
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -67,13 +106,7 @@ export default function MapComponent({ lat, lng, label = "Customer Location", pa
             <Marker position={[partnerLat, partnerLng]} icon={partnerIcon}>
               <Popup>Your Location</Popup>
             </Marker>
-            <Polyline 
-              positions={[[partnerLat, partnerLng], [lat, lng]]} 
-              color="#00dfd8" 
-              weight={4}
-              dashArray="10, 10"
-              opacity={0.7}
-            />
+            <Routing from={[partnerLat, partnerLng]} to={[lat, lng]} />
           </>
         )}
       </MapContainer>

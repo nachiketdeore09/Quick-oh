@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Facebook, Twitter, Instagram, Linkedin, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 export const Footer = () => {
   return (
@@ -16,10 +16,10 @@ export const Footer = () => {
             Revolutionizing grocery delivery with blazing fast 10-minute speeds. Because your time matters.
           </p>
           <div className="flex items-center gap-4">
-            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center hover:bg-[#007cf0] hover:text-white transition-colors"><Facebook className="w-5 h-5"/></a>
-            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center hover:bg-[#007cf0] hover:text-white transition-colors"><Twitter className="w-5 h-5"/></a>
-            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center hover:bg-[#00dfd8] hover:text-white transition-colors"><Instagram className="w-5 h-5"/></a>
-            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center hover:bg-[#007cf0] hover:text-white transition-colors"><Linkedin className="w-5 h-5"/></a>
+            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center font-bold text-gray-500 hover:bg-[#007cf0] hover:text-white transition-colors">Fb</a>
+            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center font-bold text-gray-500 hover:bg-[#007cf0] hover:text-white transition-colors">Tw</a>
+            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center font-bold text-gray-500 hover:bg-[#00dfd8] hover:text-white transition-colors">Ig</a>
+            <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center font-bold text-gray-500 hover:bg-[#007cf0] hover:text-white transition-colors">In</a>
           </div>
         </div>
         

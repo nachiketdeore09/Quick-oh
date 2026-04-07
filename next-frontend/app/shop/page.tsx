@@ -9,6 +9,7 @@ import { Product, Category } from "@/types";
 import { Loader, CardSkeleton } from "@/components/Loader";
 import { Search, SlidersHorizontal, ChevronRight, ChevronLeft } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { ProductDetailsModal } from "@/components/ProductDetailsModal";
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -20,6 +21,9 @@ function ShopContent() {
   const [loading, setLoading] = useState(true);
   
   const [activeCategory, setActiveCategory] = useState(initialCategory);
+  
+  // Modal State
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // Search & Pagination
   const [searchQuery, setSearchQuery] = useState("");
@@ -139,7 +143,11 @@ function ShopContent() {
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
                   {filteredProducts.map((product) => (
-                    <ProductCard key={product._id} product={product} />
+                    <ProductCard 
+                      key={product._id} 
+                      product={product} 
+                      onSelect={setSelectedProduct} 
+                    />
                   ))}
                 </div>
                 
@@ -172,6 +180,11 @@ function ShopContent() {
             )}
           </div>
         </div>
+
+        <ProductDetailsModal 
+          product={selectedProduct} 
+          onClose={() => setSelectedProduct(null)} 
+        />
       </main>
       <Footer />
     </>
