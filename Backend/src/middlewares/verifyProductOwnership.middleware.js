@@ -13,8 +13,8 @@ export const verifyProductOwnership = asyncHandler(async (req, res, next) => {
         throw new apiError(404, "Product not found");
     }
 
-    // Check if the vendor is the owner of the product
-    if (product.vendor.toString() !== req.user.id) {
+    // Check if the vendor is the owner of the product (Admins have global access)
+    if (req.user.role !== "admin" && product.vendor.toString() !== req.user.id) {
         throw new apiError(403, "You are not authorized to access this product");
     }
 

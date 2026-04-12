@@ -6,7 +6,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 
 export const checkVendor = asyncHandler(async (req, res, next) => {
     try {
-        if (req.user && req.user.role === "vendor") {
+        if (req.user && (req.user.role === "vendor" || req.user.role === "admin")) {
             next();
         } else {
             return res
@@ -15,7 +15,7 @@ export const checkVendor = asyncHandler(async (req, res, next) => {
                     new apiResponse(
                         403,
                         req.user,
-                        "Access denied! Only vendor can perform this operation"
+                        "Access denied! Only staff (Admin/Vendor) can perform this operation"
                     )
                 )
         }

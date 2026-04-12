@@ -1,10 +1,11 @@
 import { Router } from "express";
 import {
     createOrder, getUserOrderHistory, getSingleOrderById, updateOrderStatus,
-    cancelOrder, acceptListedOrder, getActiveOrders, getLiveOrderStatus, fetchLivePartnerLocation
+    cancelOrder, acceptListedOrder, getActiveOrders, getLiveOrderStatus, fetchLivePartnerLocation, adminAcceptOrder
 } from "../controllers/order.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkAdmin } from "../middlewares/checkAdmin.middleware.js";
+import { checkVendor } from "../middlewares/checkVendor.middleware.js";
 import { rateLimiter } from "../utils/rateLimiter.redis.js";
 const router = Router();
 
@@ -33,6 +34,12 @@ router.route("/updateOrderStatus/:id").post(
     verifyJWT,
     checkAdmin,
     updateOrderStatus
+)
+
+router.route("/adminAcceptOrder/:id").put(
+    verifyJWT,
+    checkVendor,
+    adminAcceptOrder
 )
 
 router.route("/cancelOrder/:id").put(

@@ -5,7 +5,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkVendor } from "../middlewares/checkVendor.middleware.js";
 import {
     createProduct, updateProduct, updateProductPicture, toggleStock, getAllProducts,
-    getSingleProduct, searchProduct
+    getSingleProduct, searchProduct, deleteProduct
 } from "../controllers/product.controllers.js";
 import { rateLimiter } from "../utils/rateLimiter.redis.js";
 const router = Router();
@@ -41,10 +41,16 @@ router.route("/toggleStock/:id").put(
     toggleStock
 )
 
+router.route("/deleteProduct/:id").delete(
+    verifyJWT,
+    checkVendor,
+    verifyProductOwnership,
+    deleteProduct
+)
+
 //for any customer
 
 router.route("/getAllProducts").get(
-    verifyJWT,
     getAllProducts,
 )
 

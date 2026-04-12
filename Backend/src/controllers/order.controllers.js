@@ -10,6 +10,7 @@ import { Product } from "../models/product.models.js";
 import redis from "../db/redis.js";
 import { setOrderStatus, getOrderStatus, clearOrderStatus } from "../utils/orderStatus.redis.js";
 import { getDeliveryLocation } from "../utils/deliveryLocation.redis.js";
+import { addOrderJob } from "../queues/order.queue.js";
 
 const createOrder = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
@@ -71,22 +72,14 @@ const createOrder = asyncHandler(async (req, res) => {
     //Clear the redis Cart
     await redis.del(cartKey);
 
-    const io = getIO();
-
-    const deliveryPartners = await User.find(
-        {
-            role: "deliveryPartner",
-            isAvailable: true
-        });
-
-    deliveryPartners.forEach(partner => {
-        io.to(`delivery-partner-${partner._id}`).emit("newOrder", {
-            message: "New order available for delivery",
-            orderId: newOrder._id,
-            shippingAddress: newOrder.shippingAddress,
-            totalAmount: newOrder.totalAmount
-        });
+    // [BullMQ] Offload Admin Notification to background worker
+    await addOrderJob("newOrderNotification", {
+        orderId: newOrder._id,
+        shippingAddress: newOrder.shippingAddress,
+        totalAmount: newOrder.totalAmount,
+        createdAt: newOrder.createdAt
     });
+
     console.log(newOrder._id);
 
     return res
@@ -210,16 +203,8 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     order.status = status;
     await order.save();
 
-    // Update Redis
-    if (["Delivered", "Cancelled"].includes(status)) {
-        await clearOrderStatus(orderId);
-    } else {
-        await setOrderStatus(orderId, status);
-    }
-
-    // Emit real - time update
-    const io = getIO();
-    io.to(orderId).emit("order-status-update", {
+    // [BullMQ] Offload Order Status Update to background worker
+    await addOrderJob("statusUpdateNotification", {
         orderId,
         status
     });
@@ -289,7 +274,7 @@ const acceptListedOrder = asyncHandler(async (req, res) => {
     }
     const order = await Order.findById(orderId);
     if (!order) throw new apiError(404, "Order not found");
-    if (order.status !== "Pending") throw new apiError(400, "Order already accepted");
+    if (order.status !== "Accepted") throw new apiError(400, "Order is not in Accepted state");
 
     order.status = "Assigned";
     order.assignedTo = user._id;
@@ -300,10 +285,21 @@ const acceptListedOrder = asyncHandler(async (req, res) => {
 
 // getting the active orders
 const getActiveOrders = asyncHandler(async (req, res) => {
+    const role = req.user.role;
+    let statusFilter = [];
+
+    if (role === "admin" || role === "vendor") {
+        statusFilter = ["Pending", "Accepted", "Assigned", "Processing"]; // Admins see everything active
+    } else if (role === "deliveryPartner") {
+        statusFilter = ["Accepted"]; // Partners only see orders ready for pickup
+    } else {
+        throw new apiError(403, "Unauthorized to view active orders");
+    }
+
     const activeOrders = await Order.aggregate([
         {
             $match: {
-                status: { $in: ["Pending", "Processing"] }
+                status: { $in: statusFilter }
             }
         },
         {
@@ -377,6 +373,38 @@ const getLiveOrderStatus = asyncHandler(async (req, res) => {
     );
 });
 
+const adminAcceptOrder = asyncHandler(async (req, res) => {
+    const orderId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        throw new apiError(400, "Invalid order ID");
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+        throw new apiError(404, "Order not found");
+    }
+
+    if (order.status !== "Pending") {
+        throw new apiError(400, `Order is already ${order.status}`);
+    }
+
+    order.status = "Accepted";
+    await order.save();
+
+    // [BullMQ] Offload Delivery Partner Notification to background worker
+    await addOrderJob("adminAcceptNotification", {
+        orderId: order._id,
+        shippingAddress: order.shippingAddress,
+        totalAmount: order.totalAmount
+    });
+
+    return res.status(200).json(
+        new apiResponse(200, order, "Order accepted by admin and broadcasts to partners")
+    );
+});
+
+
 const fetchLivePartnerLocation = asyncHandler(async (req, res) => {
     const orderId = req.params.id;
     const location = await getDeliveryLocation(orderId);
@@ -394,5 +422,6 @@ const fetchLivePartnerLocation = asyncHandler(async (req, res) => {
 
 export {
     createOrder, getUserOrderHistory, getSingleOrderById,
-    updateOrderStatus, cancelOrder, acceptListedOrder, getActiveOrders, getLiveOrderStatus, fetchLivePartnerLocation
+    updateOrderStatus, cancelOrder, acceptListedOrder, getActiveOrders, getLiveOrderStatus, fetchLivePartnerLocation,
+    adminAcceptOrder
 };

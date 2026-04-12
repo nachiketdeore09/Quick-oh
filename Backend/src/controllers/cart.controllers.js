@@ -7,7 +7,7 @@ import { apiError } from "../utils/apiError.js";
 import redis from "../db/redis.js";
 
 const addProductToCart = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
     const { productId, quantity } = req.body;
 
     const product = await Product.findById(productId);
@@ -20,7 +20,7 @@ const addProductToCart = asyncHandler(async (req, res) => {
     const cartKey = `cart:${userId}`;
 
     // Increment quantity atomically
-    await redis.hincrby(cartKey, productId, Math.max(1, quantity));
+    await redis.hincrby(cartKey, productId, Math.max(1, parseInt(quantity) || 1));
 
     // Optional: auto-expire cart after 24h inactivity
     await redis.expire(cartKey, 86400);
@@ -84,7 +84,7 @@ const decreaseCartItemQuantity = asyncHandler(async (req, res) => {
 
 
 const getCartInfo = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
     if (req.user.role === "deliveryPartner") {
         return res
             .status(202)
@@ -114,7 +114,8 @@ const getCartInfo = asyncHandler(async (req, res) => {
 
     let total = 0;
     const cart = products.map(product => {
-        const quantity = parseInt(cartItems[product._id]);
+        const productIdStr = product._id.toString();
+        const quantity = parseInt(cartItems[productIdStr]) || 0;
         const price = product.discount > 0
             ? product.price * (1 - product.discount / 100)
             : product.price;

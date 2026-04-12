@@ -292,7 +292,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-    const { newName, newEmail, newAddress } = req.body;
+    const { newName, newEmail, newAddress, newLatitude, newLongitude } = req.body;
     console.log(newName);
     console.log(newAddress);
     if ([newName, newEmail, newAddress].some((feild) =>
@@ -308,6 +308,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
                 name: newName,
                 email: newEmail,
                 address: newAddress,
+                latitude: newLatitude || 0,
+                longitude: newLongitude || 0,
             }
         },
         {
@@ -376,6 +378,72 @@ const getUserById = asyncHandler(async (req, res) => {
 
 // TODO -> further i have to write the getUserOrderHistory and getUserCart controller
 
+const addAddress = asyncHandler(async (req, res) => {
+    const { label, address, latitude, longitude } = req.body;
+    
+    if (!label || !address || latitude === undefined || longitude === undefined) {
+        throw new apiError(400, "All address fields (label, address, latitude, longitude) are required");
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new apiError(404, "User not found");
+    }
+
+    user.savedAddresses.push({ label, address, latitude, longitude });
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new apiResponse(200, user, "Address added successfully"));
+});
+
+const removeAddress = asyncHandler(async (req, res) => {
+    const { addressId } = req.params;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new apiError(404, "User not found");
+    }
+
+    user.savedAddresses = user.savedAddresses.filter(
+        addr => addr._id.toString() !== addressId
+    );
+    
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new apiResponse(200, user, "Address removed successfully"));
+});
+
+const setPrimaryAddress = asyncHandler(async (req, res) => {
+    const { addressId } = req.params;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new apiError(404, "User not found");
+    }
+
+    const addressToSet = user.savedAddresses.find(
+        addr => addr._id.toString() === addressId
+    );
+
+    if (!addressToSet) {
+        throw new apiError(404, "Saved address not found");
+    }
+
+    user.address = addressToSet.address;
+    user.latitude = addressToSet.latitude;
+    user.longitude = addressToSet.longitude;
+    
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new apiResponse(200, user, "Primary address updated successfully"));
+});
+
 export {
     generateRefreshAndAccessTokens,
     registerUser,
@@ -386,5 +454,8 @@ export {
     getCurrentUser,
     updateAccountDetails,
     updateUserProfilePicture,
-    getUserById
+    getUserById,
+    addAddress,
+    removeAddress,
+    setPrimaryAddress
 };

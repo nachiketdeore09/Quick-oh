@@ -1,7 +1,8 @@
 import { apiResponse } from "../utils/apiResponse.js";
 import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js"
-import { uploadOnCloudinary } from "../cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../cloudinary.js";
+import { addCleanupJob } from "../queues/cleanup.queue.js";
 import { Product } from "../models/product.models.js";
 import { Category } from "../models/category.models.js";
 import redis from "../db/redis.js";
@@ -401,6 +402,40 @@ const searchProduct = asyncHandler(async (req, res) => {
         )
 })
 
+const deleteProduct = asyncHandler(async (req, res) => {
+    const productId = req.params?.id;
+
+    if (!productId) {
+        throw new apiError(400, "Product ID is required");
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+        throw new apiError(404, "Product not found");
+    }
+
+    // [BullMQ] Offload Cloudinary asset deletion to background worker
+    if (product.productImage) {
+        await addCleanupJob("deleteCloudinaryAsset", { imageUrl: product.productImage });
+    }
+
+    await Product.findByIdAndDelete(productId);
+
+    // Invalidate product cache
+    await redis.incr("products:version");
+
+    return res
+        .status(200)
+        .json(
+            new apiResponse(
+                200,
+                {},
+                "Product deleted successfully"
+            )
+        )
+})
+
 export {
     createProduct,
     updateProduct,
@@ -408,5 +443,6 @@ export {
     toggleStock,
     getAllProducts,
     getSingleProduct,
-    searchProduct
+    searchProduct,
+    deleteProduct
 }

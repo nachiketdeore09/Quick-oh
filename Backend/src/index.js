@@ -4,9 +4,12 @@ import { app } from "./app.js";
 import http from "http";
 import { initSocket } from "./utils/socket.io.js";
 
+import { initOrderWorker } from "./workers/order.worker.js";
+import { initCleanupWorker } from "./workers/cleanup.worker.js";
+
 dotenv.config(
     {
-        path: "./env",
+        path: "./.env",
     }
 )
 
@@ -14,6 +17,11 @@ connectDB().then(
     () => {
         const server = http.createServer(app); // for the app server
         initSocket(server); // socket io server
+
+        // Initialize BullMQ Workers
+        initOrderWorker();
+        initCleanupWorker();
+
         //listining
         server.listen(process.env.PORT, () => {
             console.log(`server is listning on port: ${process.env.PORT}`);

@@ -2,7 +2,8 @@ import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
     registerUser, loginUser, logoutUser, refreshAccessTokens, changeCurrentUserPassword, getCurrentUser,
-    updateAccountDetails, updateUserProfilePicture, getUserById
+    updateAccountDetails, updateUserProfilePicture, getUserById,
+    addAddress, removeAddress, setPrimaryAddress
 } from "../controllers/user.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { rateLimiter } from "../utils/rateLimiter.redis.js";
@@ -36,6 +37,8 @@ router.route("/profilePicture").patch(verifyJWT, upload.single("profilePicture")
 
 router.route("/getUserById").get(verifyJWT, getUserById);
 
-//TODO :- write the further routes for the remaining controllers in user.controller.js
+router.route("/add-address").post(verifyJWT, addAddress);
+router.route("/remove-address/:addressId").delete(verifyJWT, removeAddress);
+router.route("/set-primary-address/:addressId").post(verifyJWT, setPrimaryAddress);
 
 export default router;
