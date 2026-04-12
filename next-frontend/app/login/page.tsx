@@ -107,6 +107,16 @@ export default function Login() {
             Sign up
           </Link>
         </p>
+
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 text-center">
+          <p className="text-xs text-gray-400 mb-2">Staff member?</p>
+          <Link 
+            href="/admin-login" 
+            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-[#007cf0] transition-colors"
+          >
+            Access Admin Portal &rarr;
+          </Link>
+        </div>
       </motion.div>
     </div>
   );

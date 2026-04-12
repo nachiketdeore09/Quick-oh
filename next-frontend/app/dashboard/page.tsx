@@ -30,6 +30,15 @@ export default function UserDashboard() {
     newLongitude: 0
   });
 
+  // Saved Addresses State
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [newSavedAddressData, setNewSavedAddressData] = useState({
+    label: "",
+    address: "",
+    latitude: 0,
+    longitude: 0
+  });
+
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || user?.role !== "customer")) {
       router.push("/login?redirect=/dashboard");
@@ -69,6 +78,54 @@ export default function UserDashboard() {
       toast.error(error.response?.data?.message || "Failed to update profile");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSavedLocationSelect = (lat: number, lng: number, pickedAddress?: string) => {
+    setNewSavedAddressData(prev => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng,
+      address: pickedAddress || prev.address
+    }));
+  };
+
+  const handleAddSavedAddress = async () => {
+    if (!newSavedAddressData.label || !newSavedAddressData.address) {
+      toast.error("Please provide a label and location");
+      return;
+    }
+    setLoading(true);
+    try {
+      const resp = await authService.addAddress(newSavedAddressData);
+      login({ ...user, ...resp.data });
+      toast.success("Address saved successfully!");
+      setIsAddingAddress(false);
+      setNewSavedAddressData({ label: "", address: "", latitude: 0, longitude: 0 });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to add address");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    try {
+      const resp = await authService.removeAddress(id);
+      login({ ...user, ...resp.data });
+      toast.success("Address deleted");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete address");
+    }
+  };
+
+  const handleSetPrimary = async (id: string) => {
+    try {
+      const resp = await authService.setPrimaryAddress(id);
+      login({ ...user, ...resp.data });
+      toast.success("Primary address updated");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to set primary address");
     }
   };
 
@@ -187,6 +244,100 @@ export default function UserDashboard() {
                   >
                     {loading ? "Updating..." : <><CheckCircle2 className="w-5 h-5" /> Save Profile</>}
                   </button>
+                )}
+              </div>
+            </div>
+
+            {/* Saved Addresses Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm relative mt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <MapPin className="text-[#007cf0] w-6 h-6" /> Saved Addresses
+                </h2>
+                {!isAddingAddress && (
+                  <button onClick={() => setIsAddingAddress(true)} className="text-sm font-medium text-[#007cf0] hover:underline">
+                    + Add New
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {user.savedAddresses && user.savedAddresses.length > 0 ? (
+                  user.savedAddresses.map((addr) => (
+                    <div key={addr._id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-md text-xs">{addr.label}</span>
+                          {(user.latitude === addr.latitude && user.longitude === addr.longitude) && (
+                            <span className="text-xs text-green-500 font-medium flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Primary</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{addr.address}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button 
+                          onClick={() => handleSetPrimary(addr._id)}
+                          className="px-3 py-1.5 text-xs font-medium text-[#007cf0] bg-[#007cf0]/10 hover:bg-[#007cf0]/20 rounded-lg transition"
+                        >
+                          Make Primary
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAddress(addr._id)}
+                          className="px-3 py-1.5 text-xs font-medium text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No additional addresses saved yet.</p>
+                )}
+
+                {isAddingAddress && (
+                  <div className="mt-6 p-5 border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl">
+                    <h3 className="font-semibold mb-4">Add a New Address</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Label (e.g. Home, Office)</label>
+                        <input
+                          type="text"
+                          placeholder="My Apartment"
+                          value={newSavedAddressData.label}
+                          onChange={(e) => setNewSavedAddressData({ ...newSavedAddressData, label: e.target.value })}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 outline-none focus:ring-2 focus:ring-[#007cf0]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">Pin Location</label>
+                        <MapPicker onLocationSelect={handleSavedLocationSelect} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Full Address</label>
+                        <textarea
+                          rows={2}
+                          value={newSavedAddressData.address}
+                          onChange={(e) => setNewSavedAddressData({ ...newSavedAddressData, address: e.target.value })}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 outline-none focus:ring-2 focus:ring-[#007cf0]"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleAddSavedAddress}
+                          disabled={loading}
+                          className="px-4 py-2 bg-[#007cf0] text-white rounded-xl text-sm font-medium hover:bg-[#0066c6] transition"
+                        >
+                          {loading ? "Saving..." : "Save Address"}
+                        </button>
+                        <button
+                          onClick={() => setIsAddingAddress(false)}
+                          className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

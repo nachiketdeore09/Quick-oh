@@ -85,7 +85,7 @@ export default function DeliveryDashboard() {
   if (!isAuthenticated || user?.role !== "deliveryPartner") return null;
 
   // Separate orders into available vs assigned to ME (if they refresh page while holding an order)
-  const availableOrders = ordersPool.filter(o => o.status === "Pending" && !o.assignedTo);
+  const availableOrders = ordersPool.filter(o => o.status === "Accepted" && !o.assignedTo);
   const myActiveOrders = ordersPool.filter(o => (o.status === "Assigned" || o.status === "Shipped") && o.assignedTo === user._id);
 
   return (

@@ -1,4 +1,12 @@
-export type UserRole = "customer" | "admin" | "deliveryPartner";
+export interface SavedAddress {
+  _id: string;
+  label: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export type UserRole = "customer" | "admin" | "deliveryPartner" | "vendor";
 
 export interface User {
   _id: string;
@@ -10,7 +18,9 @@ export interface User {
   phoneNumber?: string;
   latitude?: number;
   longitude?: number;
+  savedAddresses?: SavedAddress[];
 }
+
 
 export interface Product {
   _id: string;

@@ -32,14 +32,14 @@ export default function AdminLogin() {
         token: authData.accessToken
       };
 
-      if (userPayload.role !== "admin") {
-        toast.error("Unauthorized. Admin privileges required.");
+      if (userPayload.role !== "admin" && userPayload.role !== "vendor") {
+        toast.error("Unauthorized. Admin or Vendor privileges required.");
         return;
       }
       
       login(userPayload);
-      toast.success("Welcome, Admin!");
-      router.push("/"); // Direct to home or admin dashboard
+      toast.success(`Welcome, ${userPayload.role === "admin" ? "Admin" : "Vendor"}!`);
+      router.push("/dashboard/inventory"); 
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Login failed. Please try again.");
     } finally {

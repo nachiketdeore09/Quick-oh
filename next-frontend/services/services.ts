@@ -19,6 +19,18 @@ export const authService = {
   updateAccount: async (data: { newName: string, newEmail: string, newAddress: string, newLatitude?: number, newLongitude?: number }) => {
     const response = await api.patch("/users/update-account", data);
     return response.data;
+  },
+  addAddress: async (data: { label: string, address: string, latitude: number, longitude: number }) => {
+    const response = await api.post("/users/add-address", data);
+    return response.data;
+  },
+  removeAddress: async (addressId: string) => {
+    const response = await api.delete(`/users/remove-address/${addressId}`);
+    return response.data;
+  },
+  setPrimaryAddress: async (addressId: string) => {
+    const response = await api.post(`/users/set-primary-address/${addressId}`);
+    return response.data;
   }
 };
 
@@ -94,8 +106,40 @@ export const orderService = {
     const response = await api.get("/order/getActiveOrders");
     return response.data;
   },
+  adminAcceptOrder: async (id: string) => {
+    const response = await api.put(`/order/adminAcceptOrder/${id}`);
+    return response.data;
+  },
   acceptListedOrder: async (id: string) => {
     const response = await api.put(`/order/acceptListedOrder/${id}`);
+    return response.data;
+  }
+};
+
+export const adminProductService = {
+  createProduct: async (formData: FormData) => {
+    // Note: FormData is needed for image upload
+    const response = await api.post("/products/createProduct", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+  updateProduct: async (id: string, data: any) => {
+    const response = await api.put(`/products/updateProduct/${id}`, data);
+    return response.data;
+  },
+  updateProductImage: async (id: string, formData: FormData) => {
+    const response = await api.put(`/products/updateProductImage/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+  toggleStock: async (id: string, stockStatus: string) => {
+    const response = await api.put(`/products/toggleStock/${id}`, { stockStatus });
+    return response.data;
+  },
+  deleteProduct: async (id: string) => {
+    const response = await api.delete(`/products/deleteProduct/${id}`);
     return response.data;
   }
 };

@@ -22,8 +22,22 @@ export const Navbar = () => {
 
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-6 font-medium text-sm">
-          <Link href="/shop" className="hover:text-[#00dfd8] transition-colors">Shop</Link>
-          {isAuthenticated && (
+          {isAuthenticated && (user?.role === "admin" || user?.role === "vendor") ? (
+            <>
+              <Link href="/dashboard/inventory" className="hover:text-[#00dfd8] transition-colors font-bold text-[#007cf0]">Inventory</Link>
+              <Link href="/dashboard/orders" className="hover:text-[#00dfd8] transition-colors font-bold text-red-500 flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                Live Orders
+              </Link>
+            </>
+          ) : (
+            <Link href="/shop" className="hover:text-[#00dfd8] transition-colors">Shop</Link>
+          )}
+          
+          {isAuthenticated && user?.role === "customer" && (
             <Link href="/orders" className="hover:text-[#00dfd8] transition-colors">My Orders</Link>
           )}
           {isAuthenticated && user?.role === "deliveryPartner" && (
@@ -97,17 +111,27 @@ export const Navbar = () => {
             className="md:hidden overflow-hidden bg-white/50 dark:bg-black/50 backdrop-blur-xl mt-4 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800"
           >
             <div className="flex flex-col p-4 gap-4">
-              <Link href="/shop" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">Shop</Link>
+              {isAuthenticated && (user?.role === "admin" || user?.role === "vendor") ? (
+                <>
+                  <Link href="/dashboard/inventory" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold p-2 text-[#007cf0] hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">Manage Inventory</Link>
+                  <Link href="/dashboard/orders" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold p-2 text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                     Live Orders
+                  </Link>
+                </>
+              ) : (
+                <Link href="/shop" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">Shop</Link>
+              )}
+
               {isAuthenticated && (
                 <>
                   <Link href={user?.role === "deliveryPartner" ? "/delivery-dashboard" : "/dashboard"} onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl flex items-center gap-2">
                     <User className="w-5 h-5" /> Dashboard
                   </Link>
-                  <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">My Orders</Link>
+                  {user?.role === "customer" && (
+                    <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">My Orders</Link>
+                  )}
                 </>
-              )}
-              {isAuthenticated && user?.role === "deliveryPartner" && (
-                <Link href="/delivery-dashboard" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">Dashboard</Link>
               )}
 
               {isAuthenticated ? (
