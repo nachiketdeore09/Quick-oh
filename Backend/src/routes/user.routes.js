@@ -7,6 +7,9 @@ import {
 } from "../controllers/user.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { rateLimiter } from "../utils/rateLimiter.redis.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { registerSchema, loginSchema } from "../schemas/auth.schema.js";
+
 const router = Router();
 
 router.route("/register").post(

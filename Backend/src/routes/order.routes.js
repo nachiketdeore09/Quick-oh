@@ -7,6 +7,9 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkAdmin } from "../middlewares/checkAdmin.middleware.js";
 import { checkVendor } from "../middlewares/checkVendor.middleware.js";
 import { rateLimiter } from "../utils/rateLimiter.redis.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createOrderSchema, updateOrderStatusSchema } from "../schemas/order.schema.js";
+
 const router = Router();
 
 router.route("/createOrder").post(

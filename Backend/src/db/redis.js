@@ -1,8 +1,11 @@
-import { Redis } from "@upstash/redis";
+import { redisConnection } from "./redis.connection.js";
 
-const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+// We consolidate to use the ioredis (TCP) connection for everything
+// as the REST client was failing on Render.
+const redis = redisConnection;
+
+if (!redis) {
+    console.error("CRITICAL: Redis connection not established. Check REDIS_URL in .env");
+}
 
 export default redis;

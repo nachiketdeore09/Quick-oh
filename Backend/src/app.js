@@ -1,19 +1,29 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import helmet from "helmet";
+import compression from "compression";
+import hpp from "hpp";
 
 const app = express();
 
-app.use(cors(
-    {
-        origin: ["http://localhost:5173",
-            "http://localhost:3000",
-            "https://quick-oh.onrender.com",
-        ],
-        credentials: true
-    }
-))
+// Security Headers
+app.use(helmet());
+
+// Response Compression
+app.use(compression());
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
+
+const allowedOrigins = process.env.CORS_ORIGIN === "*"
+    ? true   // 'true' reflects the request origin — required when credentials: true
+    : [process.env.CORS_ORIGIN, "http://localhost:3000", "http://localhost:5173", "https://quick-oh.vercel.app"].filter(Boolean);
+
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true
+}))
 
 //used to access cookies from the browser to perform CRED opertaions
 app.use(cookieParser())

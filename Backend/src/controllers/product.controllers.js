@@ -230,7 +230,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     const cachedData = await redis.get(CACHE_KEY);
     if (cachedData) {
         return res.status(200).json(
-            new apiResponse(200, cachedData, "Products fetched from cache")
+            new apiResponse(200, JSON.parse(cachedData), "Products fetched from cache")
         );
     }
 
@@ -291,7 +291,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     };
 
     //Cache to Redis
-    await redis.set(CACHE_KEY, responsePayload, { ex: 300 });
+    await redis.set(CACHE_KEY, JSON.stringify(responsePayload), "EX", 300);
 
     // Return the paginated response
     return res.status(200).json(
@@ -315,10 +315,10 @@ const getSingleProduct = asyncHandler(async (req, res) => {
     const CACHE_KEY = `product:v${version}:${id}`;
 
     //Check for Redis
-    const cached = await redis.get(CACHE_KEY);
-    if (cached) {
+    const cachedData = await redis.get(CACHE_KEY);
+    if (cachedData) {
         return res.status(200).json(
-            new apiResponse(200, cached, "Product fetched from cache")
+            new apiResponse(200, JSON.parse(cachedData), "Product fetched from cache")
         );
     }
 
@@ -332,7 +332,7 @@ const getSingleProduct = asyncHandler(async (req, res) => {
     product.searches += 1;
 
     //Cache Loaded Products.
-    await redis.set(CACHE_KEY, product, { ex: 300 });
+    await redis.set(CACHE_KEY, JSON.stringify(product), "EX", 300);
 
     await product.save({ validateBeforeSave: false });
     return res

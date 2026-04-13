@@ -40,7 +40,7 @@ const decreaseCartItemQuantity = asyncHandler(async (req, res) => {
     const { productId } = req.body;
 
     // REDIS CACHE FOR CART
-    const cartKey = `cart:${userId}`;
+    const cartKey = `cart:${userId.toString()}`;
     const currentQty = await redis.hget(cartKey, productId);
     if (!currentQty) {
         throw new apiError(404, "Product not found in cart");

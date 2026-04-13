@@ -8,6 +8,9 @@ import {
     getSingleProduct, searchProduct, deleteProduct
 } from "../controllers/product.controllers.js";
 import { rateLimiter } from "../utils/rateLimiter.redis.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import { createProductSchema, updateProductSchema } from "../schemas/product.schema.js";
+
 const router = Router();
 
 //secured routes
@@ -16,6 +19,7 @@ router.route("/createProduct").post(
     verifyJWT,
     checkVendor,
     upload.single("productImage"),
+    validate(createProductSchema),
     createProduct
 )
 
@@ -23,6 +27,7 @@ router.route("/updateProduct/:id").put(
     verifyJWT,
     checkVendor,
     verifyProductOwnership,
+    validate(updateProductSchema),
     updateProduct,
 )
 

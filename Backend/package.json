@@ -15,22 +15,25 @@
     "description": "",
     "dependencies": {
         "@socket.io/redis-adapter": "^8.3.0",
-        "@upstash/redis": "^1.36.1",
         "axios": "^1.10.0",
         "bcryptjs": "^3.0.2",
         "bullmq": "^5.73.4",
         "cloudinary": "^2.6.0",
+        "compression": "^1.8.1",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
+        "helmet": "^8.1.0",
+        "hpp": "^0.2.3",
         "ioredis": "^5.10.1",
         "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.13.1",
         "mongoose-aggregate-paginate-v2": "^1.1.4",
         "multer": "^1.4.5-lts.2",
         "razorpay": "^2.9.6",
-        "socket.io": "^4.8.1"
+        "socket.io": "^4.8.1",
+        "zod": "^4.3.6"
     },
     "devDependencies": {
         "nodemon": "^3.1.9"

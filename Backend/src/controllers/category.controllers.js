@@ -48,21 +48,21 @@ const createCategory = asyncHandler(async (req, res) => {
 });
 
 const getAllCategories = asyncHandler(async (req, res) => {
-    const version = (await redis.get("categories:version")) || 1;
+    const version = (await redis.get("categories:version")) || "1";
     const cacheKey = `categories:v${version}:all`;
 
     //Check for Redis
-    const cached = await redis.get(cacheKey);
-    if (cached) {
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
         return res.status(200).json(
-            new apiResponse(200, cached, "Categories fetched from cache")
+            new apiResponse(200, JSON.parse(cachedData), "Categories fetched from cache")
         );
     }
 
     const categories = await Category.find().select("-__v");
 
     if (categories.length > 0) {
-        await redis.set(cacheKey, categories, { ex: 600 });
+        await redis.set(cacheKey, JSON.stringify(categories), "EX", 600);
     }
 
     return res
