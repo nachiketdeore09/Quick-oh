@@ -19,10 +19,14 @@ router.route("/register").post(
         windowSeconds: 60
     }),
     upload.single("profilePicture"),
+    validate(registerSchema),
     registerUser
 )
 
-router.route("/login").post(loginUser)
+router.route("/login").post(
+    validate(loginSchema),
+    loginUser
+)
 
 //secure routes
 

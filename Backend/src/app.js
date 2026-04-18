@@ -73,4 +73,21 @@ app.use("/api/v1/maps", geoCodesRouter);
 //for payment
 app.use("/api/v1/payment", paymentRoutes);
 
+// Global Error Handler Middleware
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    const message = err.message || "Something went wrong";
+    const errors = err.errors || [];
+
+    // console.error(`Error [${statusCode}]: ${message}`, err.stack);
+
+    res.status(statusCode).json({
+        success: false,
+        statusCode,
+        message,
+        errors,
+        stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+    });
+});
+
 export { app };
