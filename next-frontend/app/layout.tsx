@@ -16,7 +16,30 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Quick-oh | 10-Minute Deliveries",
-  description: "Your favorite groceries delivered in 10 minutes.",
+  description: "Your favorite groceries delivered in 10 minutes. Fresh, fast, and reliable.",
+  keywords: ["quick commerce", "grocery delivery", "10-minute delivery", "Quick-oh"],
+  authors: [{ name: "Quick-oh Team" }],
+  openGraph: {
+    title: "Quick-oh | 10-Minute Deliveries",
+    description: "Your favorite groceries delivered in 10 minutes.",
+    url: "https://quick-oh.vercel.app",
+    siteName: "Quick-oh",
+    images: [
+      {
+        url: "/og-image.png", // Ensure this asset exists in public folder
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Quick-oh | 10-Minute Deliveries",
+    description: "Your favorite groceries delivered in 10 minutes.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
